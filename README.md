@@ -1,0 +1,51 @@
+# sofa
+
+Simply connect to CouchDB database servers using Go.
+
+## Examples
+
+Create a new database:
+
+    conn, err := sofa.NewConnection("http://localhost:5984", 10*time.Second, NullAuthenticator())
+    if err != nil {
+        panic(err)
+    }
+
+    db, err := conn.CreateDatabase("example_db")
+    if err != nil {
+        panic(err)
+    }
+
+Add a document to an existing database:
+
+    conn, err := sofa.NewConnection("http://localhost:5984", 10*time.Second, NullAuthenticator())
+    if err != nil {
+        panic(err)
+    }
+
+    db := conn.Database("example_db")
+
+    doc := &struct {
+        DocumentMetadata
+        Name string `json:"name"`
+        Type string `json:"type"`
+    }{
+        DocumentMetadata: DocumentMetadata{
+            ID: "fruit1",
+        },
+        Name: "apple",
+        Type: "fruit",
+    }
+
+    rev, err := db.Put(doc)
+    if err != nil {
+        panic(err)
+    }
+
+## Limitations
+
+Large parts of the [CouchDB API](http://docs.couchdb.org/en/2.0.0/api/) are covered but not all functionality is currently implemented. Pull requests for any missing functionality would be welcomed!
+
+## Contributing
+
+Contributions of all sizes are welcomed. Simply make a pull request and I will be happy to discuss. If you don't have time to write the code please consider at least creating an issue so that I can ensure the issue gets sorted eventually.
