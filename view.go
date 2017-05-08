@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
+	"github.com/google/go-querystring/query"
 )
 
 // conflicts (boolean) – Includes conflicts information in response. Ignored if include_docs isn’t true. Default is false
@@ -72,8 +74,13 @@ func (d *Database) TemporaryView(mapFunc string) TemporaryView {
 	}
 }
 
-func (v TemporaryView) Execute(opts Options) (DocumentList, error) {
+func (v TemporaryView) Execute(vp ViewParams) (DocumentList, error) {
 	jsString, err := json.Marshal(v)
+	if err != nil {
+		return DocumentList{}, err
+	}
+
+	opts, err := query.Values(vp)
 	if err != nil {
 		return DocumentList{}, err
 	}
@@ -103,8 +110,13 @@ func (d *Database) NamedView(design, name string) NamedView {
 	}
 }
 
-func (v NamedView) Execute(opts Options) (DocumentList, error) {
+func (v NamedView) Execute(vp ViewParams) (DocumentList, error) {
 	path := fmt.Sprintf("_design/%s/_view/%s", v.DesignDoc, v.Name)
+
+	opts, err := query.Values(vp)
+	if err != nil {
+		return DocumentList{}, err
+	}
 
 	var docs DocumentList
 	if _, err := v.db.con.unmarshalRequest("GET", v.db.ViewPath(path), opts, nil, &docs); err != nil {

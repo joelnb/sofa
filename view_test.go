@@ -43,7 +43,7 @@ func TestTemporaryView(t *testing.T) {
 	db := con.Database("view_test_db")
 
 	view := db.TemporaryView(TestViewFunc)
-	result, err := view.Execute(NewURLOptions())
+	result, err := view.Execute(ViewParams{})
 	st.Assert(t, err, nil)
 
 	st.Assert(t, result.TotalRows, float64(2))
@@ -77,7 +77,7 @@ func TestNamedView(t *testing.T) {
 	db := con.Database("view_test_db")
 	view := db.NamedView("things", "byType")
 
-	result, err := view.Execute(NewURLOptions())
+	result, err := view.Execute(ViewParams{})
 	st.Assert(t, err, nil)
 
 	st.Assert(t, result.TotalRows, float64(2))
@@ -125,7 +125,7 @@ func TestViewReal(t *testing.T) {
 	st.Assert(t, err, nil)
 
 	view := db.TemporaryView(TestViewFunc)
-	result, err := view.Execute(NewURLOptions())
+	result, err := view.Execute(ViewParams{})
 	st.Assert(t, err, nil)
 
 	st.Assert(t, result.TotalRows, float64(2))
