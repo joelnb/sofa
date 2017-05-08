@@ -54,7 +54,7 @@ func TestNamedView(t *testing.T) {
 	defer gock.Off()
 
 	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
-		Get("/view_test_db/_design/things/view/byType").
+		Get("/view_test_db/_design/things/_view/byType").
 		Reply(200).
 		JSON(map[string]interface{}{
 			"total_rows": 2,

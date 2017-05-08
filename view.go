@@ -104,7 +104,7 @@ func (d *Database) NamedView(design, name string) NamedView {
 }
 
 func (v NamedView) Execute(opts Options) (DocumentList, error) {
-	path := fmt.Sprintf("_design/%s/view/%s", v.DesignDoc, v.Name)
+	path := fmt.Sprintf("_design/%s/_view/%s", v.DesignDoc, v.Name)
 
 	var docs DocumentList
 	if _, err := v.db.con.unmarshalRequest("GET", v.db.ViewPath(path), opts, nil, &docs); err != nil {
