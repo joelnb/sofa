@@ -242,6 +242,8 @@ func (con *Connection) Databases() (databases []*Database, err error) {
 	return databases, nil
 }
 
+// CreateDatabase creates a new database on the CouchDB server and returns a
+// pointer to a Database initialised with the new values.
 func (con *Connection) CreateDatabase(name string) (*Database, error) {
 	resp, err := con.Put(name, NewURLOptions(), nil)
 	if err != nil {
@@ -256,6 +258,7 @@ func (con *Connection) CreateDatabase(name string) (*Database, error) {
 	return con.Database(name), nil
 }
 
+// DeleteDatabase removes the specified database from the CouchDB server.
 func (con *Connection) DeleteDatabase(name string) error {
 	resp, err := con.Delete(name, NewURLOptions())
 	if err != nil {

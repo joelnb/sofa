@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+// Options is a slightly modified version of url.Options which provides query options
+// with JSON encoding of values.
 type Options interface {
 	Encode() string
 }
@@ -31,6 +33,7 @@ type URLOptions struct {
 	url.Values
 }
 
+// Set overwrites the currently-stored value for name with the JSON-encoded version of val.
 func (opts *URLOptions) Set(name string, val interface{}) error {
 	encoded, err := encodeValue(val)
 	if err != nil {
@@ -41,6 +44,7 @@ func (opts *URLOptions) Set(name string, val interface{}) error {
 	return nil
 }
 
+// Add adds the JSON-encoded version of val to the list of values stored for name.
 func (opts *URLOptions) Add(name string, val interface{}) error {
 	encoded, err := encodeValue(val)
 	if err != nil {

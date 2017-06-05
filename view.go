@@ -14,11 +14,19 @@ import (
 type BooleanParameter string
 
 const (
+	// Empty is the zero value for the BooleanParameter type. It is the default
+	// type and values of this type are not included in the URL parameters.
 	Empty BooleanParameter = ""
-	True  BooleanParameter = "true"
+	// True is the BooleanParameter equivalent of true. It will always be
+	// included in a query string.
+	True BooleanParameter = "true"
+	// False is the BooleanParameter equivalent of true. It will always be
+	// included in a query string.
 	False BooleanParameter = "false"
 )
 
+// ViewParams provides a type-safe implementation of the paramaters which may
+// be passed to an execution of a CouchDB view function:
 // conflicts (boolean) – Includes conflicts information in response. Ignored if include_docs isn’t true. Default is false
 // descending (boolean) – Return the documents in descending by key order. Default is false
 // endkey (json) – Stop returning records when the specified key is reached. Optional

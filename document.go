@@ -15,6 +15,8 @@ type DocumentMetadata struct {
 	Rev string `json:"_rev,omitempty"`
 }
 
+// Metadata provides a default implementation of the Document interface which is used when
+// a DocumentMetadata is embedded in another struct.
 func (md DocumentMetadata) Metadata() DocumentMetadata {
 	return md
 }
