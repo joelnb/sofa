@@ -115,3 +115,7 @@ func (v NamedView) Execute(opts URLOptions) (DocumentList, error) {
 func (v NamedView) Path() string {
 	return fmt.Sprintf("_design/%s/_view/%s", v.DesignDoc, v.Name)
 }
+
+func (v NamedView) FullPath() string {
+	return urlConcat(v.db.Name(), v.Path())
+}
