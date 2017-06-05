@@ -4,6 +4,8 @@ Simply connect to CouchDB database servers using Go.
 
 ## Examples
 
+View the [full documentation](https://godoc.org/github.com/joelnb/sofa).
+
 Create a new database:
 
     conn, err := sofa.NewConnection("http://localhost:5984", 10*time.Second, NullAuthenticator())
