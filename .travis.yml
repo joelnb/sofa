@@ -1,0 +1,5 @@
+go:
+  - 1.8.x
+go_import_path: github.com/joelnb/sofa
+language: go
+script: go test .
