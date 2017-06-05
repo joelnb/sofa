@@ -74,10 +74,15 @@ type ViewParams struct {
 	UpdateSeq              BooleanParameter `url:"update_seq,omitempty"`
 }
 
+// View is an interface representing the way that views are executed and
+// their results returned.
 type View interface {
 	Execute(Options) (DocumentList, error)
 }
 
+// TemporaryView is a type of view which can be created & accessed on the fly.
+// Temporary views are good for debugging purposed but should never be used in
+// production as they are slow for any large number of documents.
 type TemporaryView struct {
 	Map    string `json:"map,omitempty"`
 	Reduce string `json:"reduce,omitempty"`
@@ -85,6 +90,9 @@ type TemporaryView struct {
 	db *Database
 }
 
+// TemporaryView creates a temporary view for this database. Only the map function is
+// required but other parameters canbe added to the resulting TemporaryView if
+// required.
 func (d *Database) TemporaryView(mapFunc string) TemporaryView {
 	return TemporaryView{
 		Map: mapFunc,
@@ -93,6 +101,7 @@ func (d *Database) TemporaryView(mapFunc string) TemporaryView {
 	}
 }
 
+// Execute implements View for TemporaryView.
 func (v TemporaryView) Execute(params ViewParams) (DocumentList, error) {
 	jsString, err := json.Marshal(v)
 	if err != nil {
@@ -113,6 +122,9 @@ func (v TemporaryView) Execute(params ViewParams) (DocumentList, error) {
 	return docs, nil
 }
 
+// NamedView represents a view stored on a design document in the database.
+// It must be accessed with both the name of the design document and the
+// name of the view.
 type NamedView struct {
 	DesignDoc string
 	Name      string
@@ -120,6 +132,8 @@ type NamedView struct {
 	db *Database
 }
 
+// NamedView creates a new NamedView for this database. This can then be used
+// to access the current results of the permanent view on the design document.
 func (d *Database) NamedView(design, name string) NamedView {
 	return NamedView{
 		DesignDoc: design,
@@ -129,6 +143,7 @@ func (d *Database) NamedView(design, name string) NamedView {
 	}
 }
 
+// Execute implements View for NamedView.
 func (v NamedView) Execute(params ViewParams) (DocumentList, error) {
 	opts, err := query.Values(params)
 	if err != nil {
@@ -143,10 +158,12 @@ func (v NamedView) Execute(params ViewParams) (DocumentList, error) {
 	return docs, nil
 }
 
+// Path gets the path of the NamedView relative to the database root.
 func (v NamedView) Path() string {
 	return fmt.Sprintf("_design/%s/_view/%s", v.DesignDoc, v.Name)
 }
 
+// FullPath gets the path of the NamedView relative to the server root.
 func (v NamedView) FullPath() string {
 	return urlConcat(v.db.Name(), v.Path())
 }

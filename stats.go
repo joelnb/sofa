@@ -4,6 +4,8 @@ import (
 	"fmt"
 )
 
+// Statistics represents all of the statistics available from the CouchDB server.
+// This is the format returned when all statistics are being accessed.
 type Statistics struct {
 	CouchDB struct {
 		AuthCacheHits   *Statistic `json:"auth_cache_hits,omitempty"`
@@ -46,6 +48,7 @@ type Statistics struct {
 	} `json:"httpd_status_codes,omitempty"`
 }
 
+// Statistic represents the format which each statistic returned from CouchDB has.
 type Statistic struct {
 	Current     *float64 `json:"current"`
 	Description string   `json:"description"`
@@ -56,6 +59,7 @@ type Statistic struct {
 	Sum         *float64 `json:"sum"`
 }
 
+// AllStatistics gets all of the available statistics from the server.
 func (con *Connection) AllStatistics() (Statistics, error) {
 	var stats Statistics
 	_, err := con.unmarshalRequest("GET", "/_stats", NewURLOptions(), nil, &stats)
@@ -65,6 +69,7 @@ func (con *Connection) AllStatistics() (Statistics, error) {
 	return stats, nil
 }
 
+// Statistic loads a single specific statistic from the server by category & name.
 func (con *Connection) Statistic(category, name string) (Statistics, error) {
 	var stats Statistics
 	_, err := con.unmarshalRequest("GET", fmt.Sprintf("/_stats/%s/%s", category, name), NewURLOptions(), nil, &stats)

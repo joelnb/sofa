@@ -32,6 +32,8 @@ type Replication struct {
 	QueryParams map[string]interface{} `json:"query_params,omitempty"`
 }
 
+// NewReplication creates a new replication on the CouchDB server. The source and target
+// may either be a local database or a database on a remote server.
 func (con *Connection) NewReplication(id, source, target string) Replication {
 	return Replication{
 		DocumentMetadata: DocumentMetadata{ID: id},
@@ -74,6 +76,7 @@ func (con *Connection) Replication(id, rev string) (Replication, error) {
 	return repl, nil
 }
 
+// DeleteReplication removes a replication from the replicator database and cancels it.
 func (con *Connection) DeleteReplication(repl Replication) error {
 	db := con.Database("_replicator")
 
