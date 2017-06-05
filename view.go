@@ -4,6 +4,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
+	"github.com/google/go-querystring/query"
+)
+
+// BooleanParameter is a special type of boolean created to have a zero value
+// where it is not included in URL parameter output. This is useful for taking
+// the default values of a parameter.
+type BooleanParameter string
+
+const (
+	Empty BooleanParameter = ""
+	True  BooleanParameter = "true"
+	False BooleanParameter = "false"
 )
 
 // conflicts (boolean) – Includes conflicts information in response. Ignored if include_docs isn’t true. Default is false
@@ -31,26 +44,26 @@ import (
 // start_key_doc_id (string) – Alias for startkey_docid param
 // update_seq (boolean) – Response includes an update_seq value indicating which sequence id of the database the view reflects. Default is false
 type ViewParams struct {
-	Conflicts              bool          `url:"conflicts,omitempty"`
-	Descending             bool          `url:"descending,omitempty"`
-	EndKey                 interface{}   `url:"endkey,omitempty"`
-	EndKeyDocID            string        `url:"endkey_docid,omitempty"`
-	Group                  bool          `url:"group,omitempty"`
-	GroupLevel             float64       `url:"group_level,omitempty"`
-	IncludeDocs            bool          `url:"include_docs,omitempty"`
-	Attachments            bool          `url:"attachments,omitempty"`
-	AttachmentEncodingInfo bool          `url:"att_encoding_info,omitempty"`
-	InclusiveEnd           bool          `url:"inclusive_end,omitempty"`
-	Key                    interface{}   `url:"key,omitempty"`
-	Keys                   []interface{} `url:"keys,omitempty"`
-	Limit                  float64       `url:"limit,omitempty"`
-	Reduce                 bool          `url:"reduce,omitempty"`
-	Skip                   float64       `url:"skip,omitempty"`
-	Sorted                 bool          `url:"sorted,omitempty"`
-	Stale                  string        `url:"stale,omitempty"`
-	StartKey               interface{}   `url:"startkey,omitempty"`
-	StartKeyDocID          string        `url:"startkey_docid,omitempty"`
-	UpdateSeq              bool          `url:"update_seq,omitempty"`
+	Conflicts              BooleanParameter `url:"conflicts,omitempty"`
+	Descending             BooleanParameter `url:"descending,omitempty"`
+	EndKey                 interface{}      `url:"endkey,omitempty"`
+	EndKeyDocID            string           `url:"endkey_docid,omitempty"`
+	Group                  BooleanParameter `url:"group,omitempty"`
+	GroupLevel             float64          `url:"group_level,omitempty"`
+	IncludeDocs            BooleanParameter `url:"include_docs,omitempty"`
+	Attachments            BooleanParameter `url:"attachments,omitempty"`
+	AttachmentEncodingInfo BooleanParameter `url:"att_encoding_info,omitempty"`
+	InclusiveEnd           BooleanParameter `url:"inclusive_end,omitempty"`
+	Key                    interface{}      `url:"key,omitempty"`
+	Keys                   []interface{}    `url:"keys,omitempty"`
+	Limit                  float64          `url:"limit,omitempty"`
+	Reduce                 BooleanParameter `url:"reduce,omitempty"`
+	Skip                   float64          `url:"skip,omitempty"`
+	Sorted                 BooleanParameter `url:"sorted,omitempty"`
+	Stale                  string           `url:"stale,omitempty"`
+	StartKey               interface{}      `url:"startkey,omitempty"`
+	StartKeyDocID          string           `url:"startkey_docid,omitempty"`
+	UpdateSeq              BooleanParameter `url:"update_seq,omitempty"`
 }
 
 type View interface {
@@ -72,8 +85,13 @@ func (d *Database) TemporaryView(mapFunc string) TemporaryView {
 	}
 }
 
-func (v TemporaryView) Execute(opts URLOptions) (DocumentList, error) {
+func (v TemporaryView) Execute(params ViewParams) (DocumentList, error) {
 	jsString, err := json.Marshal(v)
+	if err != nil {
+		return DocumentList{}, err
+	}
+
+	opts, err := query.Values(params)
 	if err != nil {
 		return DocumentList{}, err
 	}
@@ -103,7 +121,12 @@ func (d *Database) NamedView(design, name string) NamedView {
 	}
 }
 
-func (v NamedView) Execute(opts URLOptions) (DocumentList, error) {
+func (v NamedView) Execute(params ViewParams) (DocumentList, error) {
+	opts, err := query.Values(params)
+	if err != nil {
+		return DocumentList{}, err
+	}
+
 	var docs DocumentList
 	if _, err := v.db.con.unmarshalRequest("GET", v.db.ViewPath(v.Path()), opts, nil, &docs); err != nil {
 		return DocumentList{}, err
