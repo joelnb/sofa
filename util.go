@@ -38,10 +38,14 @@ func (con *Connection) FutonURL(path string) url.URL {
 	return furl
 }
 
-func Boolean(b bool) BooleanParameter {
+func FromBoolean(b bool) BooleanParameter {
 	if b {
 		return True
 	}
 
 	return False
+}
+
+func ToBoolean(b BooleanParameter) bool {
+	return b == True
 }
