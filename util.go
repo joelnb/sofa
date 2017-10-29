@@ -37,3 +37,11 @@ func (con *Connection) FutonURL(path string) url.URL {
 	furl.Path = urlConcat(furl.Path, "document.html")
 	return furl
 }
+
+func Boolean(b bool) BooleanParameter {
+	if b {
+		return True
+	}
+
+	return False
+}
