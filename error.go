@@ -19,16 +19,19 @@ type ResponseError struct {
 	Reason string
 }
 
-// ErrorStatus checks whether the given error is a ResposeError
-// with a matching statusCode.
+// ErrorStatus checks returns true if the provided error is a
+// ResponseError with a status code which matches the one provided.
 func ErrorStatus(err error, statusCode int) bool {
 	return isResponseError(err) && err.(ResponseError).StatusCode == statusCode
 }
 
+// Error provodes a detailed representation of the response error
+// including as much information as there is available
 func (e ResponseError) Error() string {
 	if e.Err == "" {
 		return fmt.Sprintf("%v %v: %v", e.Method, e.URL, e.StatusCode)
 	}
+
 	return fmt.Sprintf("%v %v: (%v) %v: %v", e.Method, e.URL, e.StatusCode, e.Err, e.Reason)
 }
 
@@ -66,5 +69,6 @@ func unmarshalResponse(resp *http.Response, res interface{}) error {
 		resp.Body.Close()
 		return err
 	}
+
 	return resp.Body.Close()
 }

@@ -38,6 +38,8 @@ func (con *Connection) FutonURL(path string) url.URL {
 	return furl
 }
 
+// FromBoolean converts a standard bool value into a sofa.BooleanParameter for
+// use in documents to allow not including unset booleans.
 func FromBoolean(b bool) BooleanParameter {
 	if b {
 		return True
@@ -46,6 +48,7 @@ func FromBoolean(b bool) BooleanParameter {
 	return False
 }
 
+// ToBoolean converts a sofa.BooleanParameter value into a standard bool.
 func ToBoolean(b BooleanParameter) bool {
 	return b == True
 }
