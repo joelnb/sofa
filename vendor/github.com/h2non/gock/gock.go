@@ -81,6 +81,13 @@ func Off() {
 	Disable()
 }
 
+// OffAll is like `Off()`, but it also removes the unmatched requests registry.
+func OffAll() {
+	Flush()
+	Disable()
+	CleanUnmatchedRequest()
+}
+
 // EnableNetworking enables real HTTP networking
 func EnableNetworking() {
 	mutex.Lock()
@@ -119,6 +126,13 @@ func GetUnmatchedRequests() []*http.Request {
 // HasUnmatchedRequest returns true if gock has received any requests that didn't match a mock
 func HasUnmatchedRequest() bool {
 	return len(GetUnmatchedRequests()) > 0
+}
+
+// CleanUnmatchedRequest cleans the unmatched requests internal registry.
+func CleanUnmatchedRequest() {
+	mutex.Lock()
+	defer mutex.Unlock()
+	unmatchedRequests = []*http.Request{}
 }
 
 func trackUnmatchedRequest(req *http.Request) {

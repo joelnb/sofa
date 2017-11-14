@@ -113,7 +113,7 @@ func MatchQueryParams(req *http.Request, ereq *Request) (bool, error) {
 // TODO: not too smart now, needs several improvements.
 func MatchBody(req *http.Request, ereq *Request) (bool, error) {
 	// If match body is empty, just continue
-	if req.Method == "GET" || len(ereq.BodyBuffer) == 0 {
+	if req.Method == "HEAD" || len(ereq.BodyBuffer) == 0 {
 		return true, nil
 	}
 

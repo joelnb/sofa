@@ -1,5 +1,5 @@
 hash: 967baecf73758e96f742b10997bd701417afdcc3cc8465fe9646e65d12259d45
-updated: 2017-05-04T23:14:04.847295924+01:00
+updated: 2017-11-14T22:07:48.384136132Z
 imports:
 - name: github.com/google/go-querystring
   version: 53e6ce116135b80d037921a7fdd5138cf32d7a8a
@@ -7,6 +7,6 @@ imports:
   - query
 testImports:
 - name: github.com/h2non/gock
-  version: 2897ffde93a71060ce86518f1e7317ec8433d2d6
+  version: 84d599244901620fb3eb96473eb9e50619f69b47
 - name: github.com/nbio/st
   version: e9e8d9816f3268def6dcbd2dea03301f40e9de94

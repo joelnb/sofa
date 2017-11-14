@@ -1,4 +1,17 @@
 
+## v1.0.6 / 2017-07-27
+
+  * fix(#23): mock transport deadlock
+
+## v1.0.5 / 2017-07-26
+
+  * feat(#25, #24): use content type only if missing while matching JSON/XML
+  * feat(#24): add CleanUnmatchedRequests() and OffAll() public functions
+  * feat(version): bump to v1.0.5
+  * fix(store): use proper indent style
+  * fix(mutex): use different mutex for store
+  * feat(travis): add Go 1.8 CI support
+
 ## v1.0.4 / 2017-02-14
 
   * Update README to include most up to date version (#17)
