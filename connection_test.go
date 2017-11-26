@@ -8,6 +8,22 @@ import (
 	"github.com/nbio/st"
 )
 
+func getMockDatabaseRoot() map[string]interface{} {
+	return map[string]interface{}{
+		"db_name":              "test_db",
+		"doc_count":            639,
+		"doc_del_count":        10,
+		"update_seq":           901,
+		"purge_seq":            0,
+		"compact_running":      false,
+		"disk_size":            3427544,
+		"data_size":            1563132,
+		"instance_start_time":  "1484039376767413",
+		"disk_format_version":  6,
+		"committed_update_seq": 2913,
+	}
+}
+
 // TestConnectionDatabase tests that a Database can successfully be retrieved from a Connection
 func TestConnectionDatabase(t *testing.T) {
 	defer gock.Off()
@@ -15,19 +31,7 @@ func TestConnectionDatabase(t *testing.T) {
 	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
 		Get("/test_db").
 		Reply(200).
-		JSON(map[string]interface{}{
-			"db_name":              "test_db",
-			"doc_count":            639,
-			"doc_del_count":        10,
-			"update_seq":           901,
-			"purge_seq":            0,
-			"compact_running":      false,
-			"disk_size":            3427544,
-			"data_size":            1563132,
-			"instance_start_time":  "1484039376767413",
-			"disk_format_version":  6,
-			"committed_update_seq": 2913,
-		})
+		JSON(getMockDatabase())
 
 	con := defaultMockTestConnection(t)
 	db := con.Database("test_db")
@@ -50,19 +54,7 @@ func TestConnectionEnsureDatabase(t *testing.T) {
 	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
 		Get("/test_db").
 		Reply(200).
-		JSON(map[string]interface{}{
-			"db_name":              "test_db",
-			"doc_count":            639,
-			"doc_del_count":        10,
-			"update_seq":           901,
-			"purge_seq":            0,
-			"compact_running":      false,
-			"disk_size":            3427544,
-			"data_size":            1563132,
-			"instance_start_time":  "1484039376767413",
-			"disk_format_version":  6,
-			"committed_update_seq": 2913,
-		})
+		JSON(getMockDatabase())
 
 	con := defaultMockTestConnection(t)
 
