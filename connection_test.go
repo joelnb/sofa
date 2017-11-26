@@ -31,7 +31,7 @@ func TestConnectionDatabase(t *testing.T) {
 	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
 		Get("/test_db").
 		Reply(200).
-		JSON(getMockDatabase())
+		JSON(getMockDatabaseRoot())
 
 	con := defaultMockTestConnection(t)
 	db := con.Database("test_db")
@@ -54,7 +54,7 @@ func TestConnectionEnsureDatabase(t *testing.T) {
 	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
 		Get("/test_db").
 		Reply(200).
-		JSON(getMockDatabase())
+		JSON(getMockDatabaseRoot())
 
 	con := defaultMockTestConnection(t)
 
