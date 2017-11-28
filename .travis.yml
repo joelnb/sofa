@@ -5,7 +5,9 @@ go:
   - 1.8.x
 go_import_path: github.com/joelnb/sofa
 language: go
-script: env SOFA_TEST_HOST=http://127.0.0.1:5984 go test -v .
+script:
+  - env SOFA_TEST_HOST=http://127.0.0.1:5984 go test -v .
+  - diff -u <(echo -n) <(gofmt -d *.go)
 services:
   - docker
 sudo: required
