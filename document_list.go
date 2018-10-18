@@ -73,7 +73,7 @@ func (dl *DocumentList) UnmarshalDocuments(docs interface{}) error {
 // may also be sent to the server as part of the bulk documents API.
 type Row struct {
 	ID       string          `json:"id,omitempty"`
-	Key      string          `json:"key,omitempty"`
+	Key      interface{}     `json:"key,omitempty"`
 	Value    interface{}     `json:"value,omitempty"`
 	Document json.RawMessage `json:"doc,omitempty"`
 }
