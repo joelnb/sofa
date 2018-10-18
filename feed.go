@@ -125,6 +125,13 @@ func (f *ContinuousChangesFeed) Next() (ChangesFeedChange, error) {
 		return ChangesFeedChange{}, f.scanner.Err()
 	}
 
+	// Swallow an extra newline if needed
+	if len(f.scanner.Bytes()) == 0 {
+		if !f.scanner.Scan() {
+			return ChangesFeedChange{}, f.scanner.Err()
+		}
+	}
+
 	var u ChangesFeedChange
 	if err := json.Unmarshal(f.scanner.Bytes(), &u); err != nil {
 		return ChangesFeedChange{}, err
