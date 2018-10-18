@@ -11,7 +11,7 @@ import (
 func TestReplicatorSave(t *testing.T) {
 	defer gock.Off()
 
-	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version1MockHost)).
 		Put("/_replicator/_myrepl").
 		Reply(201).
 		JSON(map[string]interface{}{
@@ -21,7 +21,7 @@ func TestReplicatorSave(t *testing.T) {
 		}).
 		SetHeader("Etag", `"1-801609c9fdb4c6d196820c5b1f3c26c9"`)
 
-	con := defaultMockTestConnection(t)
+	con := globalTestConnections.Version1(t, true)
 
 	repl := con.NewReplication("_myrepl", "mydb", "yourdb")
 	repl.CreateTarget = true
@@ -34,8 +34,7 @@ func TestReplicatorSave(t *testing.T) {
 }
 
 func TestReplicatorReal(t *testing.T) {
-	serverRequired(t)
-	con := defaultTestConnection(t)
+	con := globalTestConnections.Version1(t, false)
 
 	getRepl, err := con.Replication("my_repl", "")
 	if err != nil {

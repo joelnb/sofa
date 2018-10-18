@@ -4,70 +4,75 @@ import (
 	"os"
 	"testing"
 	"time"
-
-	"github.com/nbio/st"
 )
 
-var (
-	TestServerAvailable = false
-	TestServer          = "127.0.0.1:5984"
-	TestMockHost        = "couchdb.local"
-)
+var globalTestConnections *TestConnections
 
-func TestMain(m *testing.M) {
-	// Setup
-	if s := os.Getenv("SOFA_TEST_HOST"); s != "" {
-		TestServerAvailable = true
-		TestServer = s
-	}
-	// Run
-	retCode := m.Run()
-	// Teardown
-	os.Exit(retCode)
+type TestConnections struct {
+	Version1Host string
+	Version2Host string
+
+	Version1MockHost string
+	Version2MockHost string
 }
 
-func initTestDB(t *testing.T, con *Connection, dbname string) *Database {
-	// Delete the DB if it currently exists
-	if err := con.DeleteDatabase(dbname); err != nil {
-		if !ErrorStatus(err, 404) {
-			t.Fatal(err)
+func NewTestConnections() *TestConnections {
+	return &TestConnections{
+		Version1Host: os.Getenv("SOFA_TEST_HOST_1"),
+		Version2Host: os.Getenv("SOFA_TEST_HOST_2"),
+
+		Version1MockHost: "couchdb1.local",
+		Version2MockHost: "couchdb2.local",
+	}
+}
+
+func (tc *TestConnections) Version1(t *testing.T, mock bool) *CouchDB1Connection {
+	host := ""
+	if mock {
+		host = tc.Version1MockHost
+	} else {
+		host = tc.Version1Host
+		if host == "" {
+			t.Skip("skipping - $SOFA_TEST_HOST_1 not set")
+			return nil
 		}
 	}
 
-	db, err := con.CreateDatabase(dbname)
-	st.Assert(t, err, nil)
-	return db
-}
-
-func cleanupTestDB(t *testing.T, con *Connection, dbname string) {
-	if err := con.DeleteDatabase(dbname); err != nil {
-		t.Fatal(err)
-	}
-}
-
-// serverRequired skips the current test if the address of a CouchDB server has not
-// been provided by the user. This is to prevent all of these tests failing if the
-// server is not available.
-func serverRequired(t *testing.T) {
-	if !TestServerAvailable {
-		t.Skip("skipping - $SOFA_TEST_HOST not set")
-	}
-}
-
-func defaultTestConnection(t *testing.T) *Connection {
-	conn, err := NewConnection(TestServer, 10*time.Second, NullAuthenticator())
+	con, err := newConnection(host, 10*time.Second, NullAuthenticator())
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
 
-	return conn
+	return &CouchDB1Connection{con}
 }
 
-func defaultMockTestConnection(t *testing.T) *Connection {
-	conn, err := NewConnection(TestMockHost, 10*time.Second, NullAuthenticator())
+func (tc *TestConnections) Version2(t *testing.T, mock bool) *CouchDB2Connection {
+	host := ""
+	if mock {
+		host = tc.Version2MockHost
+	} else {
+		host = tc.Version2Host
+		if host == "" {
+			t.Skip("skipping - $SOFA_TEST_HOST_2 not set")
+			return nil
+		}
+	}
+
+	con, err := newConnection(host, 10*time.Second, NullAuthenticator())
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
 
-	return conn
+	return &CouchDB2Connection{con}
+}
+
+func TestMain(m *testing.M) {
+	// Setup
+	globalTestConnections = NewTestConnections()
+
+	// Run
+	retCode := m.Run()
+
+	// Teardown
+	os.Exit(retCode)
 }

@@ -11,7 +11,7 @@ import (
 func TestDocumentList(t *testing.T) {
 	defer gock.Off()
 
-	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version1MockHost)).
 		Post("/test_db/_all_docs").
 		MatchParam("include_docs", "^true$").
 		Reply(200).
@@ -31,7 +31,7 @@ func TestDocumentList(t *testing.T) {
 			},
 		})
 
-	con := defaultMockTestConnection(t)
+	con := globalTestConnections.Version1(t, true)
 	db := con.Database("test_db")
 
 	allDocs, err := db.Documents()

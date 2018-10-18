@@ -8,7 +8,7 @@ import (
 )
 
 func TestFutonURL(t *testing.T) {
-	conn := defaultTestConnection(t)
+	conn := globalTestConnections.Version1(t, true)
 	baseURL := conn.URL("/")
 
 	uA := conn.FutonURL("/database_name")

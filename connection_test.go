@@ -28,12 +28,12 @@ func getMockDatabaseRoot() map[string]interface{} {
 func TestConnectionDatabase(t *testing.T) {
 	defer gock.Off()
 
-	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version1MockHost)).
 		Get("/test_db").
 		Reply(200).
 		JSON(getMockDatabaseRoot())
 
-	con := defaultMockTestConnection(t)
+	con := globalTestConnections.Version1(t, true)
 	db := con.Database("test_db")
 
 	st.Assert(t, db.metadata, ((*DatabaseMetadata)(nil)))
@@ -51,12 +51,12 @@ func TestConnectionDatabase(t *testing.T) {
 func TestConnectionEnsureDatabase(t *testing.T) {
 	defer gock.Off()
 
-	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version1MockHost)).
 		Get("/test_db").
 		Reply(200).
 		JSON(getMockDatabaseRoot())
 
-	con := defaultMockTestConnection(t)
+	con := globalTestConnections.Version1(t, true)
 
 	db, err := con.EnsureDatabase("test_db")
 	st.Assert(t, err, nil)
@@ -72,11 +72,11 @@ func TestConnectionEnsureDatabase(t *testing.T) {
 func TestConnectionPing(t *testing.T) {
 	defer gock.Off()
 
-	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version1MockHost)).
 		Head("/").
 		Reply(200)
 
-	con := defaultMockTestConnection(t)
+	con := globalTestConnections.Version1(t, true)
 
 	if err := con.Ping(); err != nil {
 		t.Fatal(err)
@@ -86,7 +86,7 @@ func TestConnectionPing(t *testing.T) {
 func TestConnectionServerInfo(t *testing.T) {
 	defer gock.Off()
 
-	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version1MockHost)).
 		Get("/").
 		Reply(200).
 		JSON(map[string]interface{}{
@@ -96,7 +96,7 @@ func TestConnectionServerInfo(t *testing.T) {
 			"vendor":  map[string]string{"name": "The Apache Software Foundation", "version": "1.6.1"},
 		})
 
-	con := defaultMockTestConnection(t)
+	con := globalTestConnections.Version1(t, true)
 
 	info, err := con.ServerInfo()
 	st.Assert(t, err, nil)
@@ -116,12 +116,12 @@ func TestConnectionListDatabases(t *testing.T) {
 		"testdb",
 	}
 
-	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version1MockHost)).
 		Get("/_all_dbs").
 		Reply(200).
 		JSON(testDBs)
 
-	con := defaultMockTestConnection(t)
+	con := globalTestConnections.Version1(t, true)
 
 	serverDBs, err := con.ListDatabases()
 	st.Assert(t, err, nil)
@@ -132,15 +132,22 @@ func TestConnectionListDatabases(t *testing.T) {
 }
 
 func TestConnectionReal(t *testing.T) {
-	serverRequired(t)
-	con := defaultTestConnection(t)
+	con := globalTestConnections.Version1(t, false)
 
 	info, err := con.ServerInfo()
 	st.Assert(t, err, nil)
 
 	st.Assert(t, info.CouchDB, "Welcome")
 
-	db := initTestDB(t, con, "test_db")
+	// Delete the DB if it currently exists
+	if err := con.DeleteDatabase("test_db"); err != nil {
+		if !ErrorStatus(err, 404) {
+			t.Fatal(err)
+		}
+	}
+
+	db, err := con.CreateDatabase("test_db")
+	st.Assert(t, err, nil)
 
 	doc := &struct {
 		DocumentMetadata
@@ -163,5 +170,7 @@ func TestConnectionReal(t *testing.T) {
 	_, err = db.Delete(doc)
 	st.Assert(t, err, nil)
 
-	cleanupTestDB(t, con, "test_db")
+	if err := con.DeleteDatabase("test_db"); err != nil {
+		t.Fatal(err)
+	}
 }

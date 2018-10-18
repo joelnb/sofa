@@ -11,7 +11,8 @@ import (
 	"time"
 )
 
-// Connection is a connection to a CouchDB server.
+// Connection is a connection to a CouchDB server. It provides all of the
+// unversioned methods which are identical between CouchDB versions.
 type Connection struct {
 	auth Authenticator
 	http *http.Client
@@ -20,9 +21,17 @@ type Connection struct {
 	timeout time.Duration
 }
 
-// NewConnection creates a new Connection which can be used to interact with a single CouchDB server.
-// Any query parameters passed in the serverUrl are discarded before creating the connection.
-func NewConnection(serverURL string, timeout time.Duration, auth Authenticator) (*Connection, error) {
+// CouchDB1Connection is a connection specifically for a version 1 server.
+type CouchDB1Connection struct {
+	*Connection
+}
+
+// CouchDB2Connection is a connection specifically for a version 2 server.
+type CouchDB2Connection struct {
+	*Connection
+}
+
+func newConnection(serverURL string, timeout time.Duration, auth Authenticator) (*Connection, error) {
 	hasURLScheme, err := regexp.MatchString("^https?://.*", serverURL)
 	if err != nil {
 		return nil, err
@@ -58,6 +67,28 @@ func NewConnection(serverURL string, timeout time.Duration, auth Authenticator) 
 	}
 
 	return con, nil
+}
+
+// NewConnection creates a new CouchDB1Connection which can be used to interact with a single CouchDB server.
+// Any query parameters passed in the serverUrl are discarded before creating the connection.
+func NewConnection(serverURL string, timeout time.Duration, auth Authenticator) (*CouchDB1Connection, error) {
+	con, err := newConnection(serverURL, timeout, auth)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CouchDB1Connection{con}, nil
+}
+
+// NewConnection2 creates a new CouchDB2Connection which can be used to interact with a single CouchDB server.
+// Any query parameters passed in the serverUrl are discarded before creating the connection.
+func NewConnection2(serverURL string, timeout time.Duration, auth Authenticator) (*CouchDB2Connection, error) {
+	con, err := newConnection(serverURL, timeout, auth)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CouchDB2Connection{con}, nil
 }
 
 // URL returns the URL of the server with a path appended.

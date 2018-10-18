@@ -18,7 +18,7 @@ func TestTemporaryView(t *testing.T) {
 	defer gock.Off()
 
 	// TODO: Check the data which gets sent
-	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version1MockHost)).
 		Post("/view_test_db/_temp_view").
 		BodyString(`{"map":"function(doc) {\n    if (doc.type !== undefined \u0026\u0026 doc.name !== undefined) {\n        emit(doc.type, doc.name)\n    }\n}"}`).
 		Reply(200).
@@ -39,7 +39,7 @@ func TestTemporaryView(t *testing.T) {
 			},
 		})
 
-	con := defaultMockTestConnection(t)
+	con := globalTestConnections.Version1(t, true)
 	db := con.Database("view_test_db")
 
 	view := db.TemporaryView(TestViewFunc)
@@ -53,7 +53,7 @@ func TestTemporaryView(t *testing.T) {
 func TestNamedView(t *testing.T) {
 	defer gock.Off()
 
-	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version1MockHost)).
 		Get("/view_test_db/_design/things/_view/byType").
 		MatchParam("reduce", "false").
 		Reply(200).
@@ -74,7 +74,7 @@ func TestNamedView(t *testing.T) {
 			},
 		})
 
-	con := defaultMockTestConnection(t)
+	con := globalTestConnections.Version1(t, true)
 	db := con.Database("view_test_db")
 	view := db.NamedView("things", "byType")
 
@@ -88,11 +88,23 @@ func TestNamedView(t *testing.T) {
 // TODO: Currently only tests a temporary view. Would be nice to also create a
 //       named view and test that too.
 func TestViewReal(t *testing.T) {
-	serverRequired(t)
-	con := defaultTestConnection(t)
+	con := globalTestConnections.Version1(t, false)
 
-	db := initTestDB(t, con, "view_test_db")
-	defer cleanupTestDB(t, con, "view_test_db")
+	// Delete the DB if it currently exists
+	if err := con.DeleteDatabase("feed_test_db"); err != nil {
+		if !ErrorStatus(err, 404) {
+			t.Fatal(err)
+		}
+	}
+
+	db, err := con.CreateDatabase("feed_test_db")
+	st.Assert(t, err, nil)
+
+	defer func() {
+		if err := con.DeleteDatabase("feed_test_db"); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	appleDoc := &struct {
 		DocumentMetadata
@@ -118,7 +130,6 @@ func TestViewReal(t *testing.T) {
 		Type: "fruit",
 	}
 
-	var err error
 	_, err = db.Put(appleDoc)
 	st.Assert(t, err, nil)
 

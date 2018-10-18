@@ -12,16 +12,29 @@ import (
 func TestPollingFeed(t *testing.T) {
 	defer gock.Off()
 
-	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version1MockHost)).
 		Post("/test_db/_changes")
 }
 
 func TestFeedPollingReal(t *testing.T) {
-	serverRequired(t)
-	con := defaultTestConnection(t)
+	con := globalTestConnections.Version1(t, false)
+
+	defer func() {
+		if err := con.DeleteDatabase("feed_test_db"); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	for _, lp := range []bool{true, false} {
-		db := initTestDB(t, con, "feed_test_db")
+		// Delete the DB if it currently exists
+		if err := con.DeleteDatabase("feed_test_db"); err != nil {
+			if !ErrorStatus(err, 404) {
+				t.Fatal(err)
+			}
+		}
+
+		db, err := con.CreateDatabase("feed_test_db")
+		st.Assert(t, err, nil)
 
 		feed := db.PollingChangesFeed(lp)
 
@@ -48,7 +61,7 @@ func TestFeedPollingReal(t *testing.T) {
 			Type: "fruit",
 		}
 
-		_, err := db.Put(doc)
+		_, err = db.Put(doc)
 		st.Assert(t, err, nil)
 
 		middleUpdate, err := feed.Next(ChangesFeedParams{})
@@ -83,17 +96,27 @@ func TestFeedPollingReal(t *testing.T) {
 		st.Assert(t, err, nil)
 
 		st.Assert(t, lastUpdate.LastSeq, updateSince.LastSeq)
-
-		cleanupTestDB(t, con, "feed_test_db")
 	}
 }
 
 func TestFeedContinuousReal(t *testing.T) {
-	serverRequired(t)
-	con := defaultTestConnection(t)
+	con := globalTestConnections.Version1(t, false)
 
-	db := initTestDB(t, con, "feed_test_db")
-	defer cleanupTestDB(t, con, "feed_test_db")
+	// Delete the DB if it currently exists
+	if err := con.DeleteDatabase("feed_test_db"); err != nil {
+		if !ErrorStatus(err, 404) {
+			t.Fatal(err)
+		}
+	}
+
+	db, err := con.CreateDatabase("feed_test_db")
+	st.Assert(t, err, nil)
+
+	defer func() {
+		if err := con.DeleteDatabase("feed_test_db"); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	feed := db.ContinuousChangesFeed(ChangesFeedParams{})
 
@@ -109,7 +132,7 @@ func TestFeedContinuousReal(t *testing.T) {
 		Type: "fruit",
 	}
 
-	_, err := db.Put(doc)
+	_, err = db.Put(doc)
 	st.Assert(t, err, nil)
 
 	middleUpdate, err := feed.Next()

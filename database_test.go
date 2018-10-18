@@ -11,7 +11,7 @@ import (
 func TestDatabaseGet(t *testing.T) {
 	defer gock.Off()
 
-	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version1MockHost)).
 		Get("/test_db/somedoc").
 		Reply(200).
 		JSON(map[string]string{
@@ -21,7 +21,7 @@ func TestDatabaseGet(t *testing.T) {
 		}).
 		SetHeader("Etag", `"51-f6d5f19782344f44876a9d775376c549"`)
 
-	con := defaultMockTestConnection(t)
+	con := globalTestConnections.Version1(t, true)
 	db := con.Database("test_db")
 
 	doc := struct {
@@ -38,7 +38,7 @@ func TestDatabaseGet(t *testing.T) {
 func TestDatabasePut(t *testing.T) {
 	defer gock.Off()
 
-	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version1MockHost)).
 		Put("/test_db/newdoc").
 		Reply(201).
 		JSON(map[string]interface{}{
@@ -48,7 +48,7 @@ func TestDatabasePut(t *testing.T) {
 		}).
 		SetHeader("Etag", `"2-801609c9fdb4c6d196820c5b1f3c26c9"`)
 
-	con := defaultMockTestConnection(t)
+	con := globalTestConnections.Version1(t, true)
 	db := con.Database("test_db")
 
 	doc := &struct {
@@ -84,7 +84,7 @@ func TestDatabaseList(t *testing.T) {
 		},
 	}
 
-	gock.New(fmt.Sprintf("https://%s", TestMockHost)).
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version1MockHost)).
 		Get("/list-db_23456/_all_docs").
 		Reply(200).
 		JSON(map[string]interface{}{
@@ -104,7 +104,7 @@ func TestDatabaseList(t *testing.T) {
 			},
 		})
 
-	con := defaultMockTestConnection(t)
+	con := globalTestConnections.Version1(t, true)
 	db := con.Database("list-db_23456")
 
 	docs, err := db.ListDocuments()
