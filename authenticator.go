@@ -5,6 +5,8 @@ import (
 	"crypto/sha1"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -83,6 +85,7 @@ type clientCertAuthenticator struct {
 	CertPath string
 	KeyPath  string
 	CaPath   string
+	Password string
 }
 
 // ClientCertAuthenticator provides an Authenticator which uses a client SSL certificate
@@ -95,10 +98,50 @@ func ClientCertAuthenticator(certPath, keyPath, caPath string) (Authenticator, e
 	}, nil
 }
 
+// ClientCertAuthenticatorPassword provides an Authenticator which uses a client SSL certificate
+// to authenticate to the couchdb server. This version allows the user to specify the password
+// `the key is encrypted with.
+func ClientCertAuthenticatorPassword(certPath, keyPath, caPath, password string) (Authenticator, error) {
+	return &clientCertAuthenticator{
+		CertPath: certPath,
+		KeyPath:  keyPath,
+		CaPath:   caPath,
+		Password: password,
+	}, nil
+}
+
 func (c *clientCertAuthenticator) Authenticate(req *http.Request) {}
 
 func (c *clientCertAuthenticator) Client() (*http.Client, error) {
-	cert, err := tls.LoadX509KeyPair(c.CertPath, c.KeyPath)
+	var cert tls.Certificate
+	var err error
+
+	if c.Password == "" {
+		cert, err = tls.LoadX509KeyPair(c.CertPath, c.KeyPath)
+	} else {
+		keyBytes, err := ioutil.ReadFile(c.KeyPath)
+		if err != nil {
+			return nil, err
+		}
+
+		pemBlock, _ := pem.Decode(keyBytes)
+		if pemBlock == nil {
+			return nil, errors.New("expecting a PEM block in encrypted private key file")
+		}
+
+		decBytes, err := x509.DecryptPEMBlock(pemBlock, []byte(c.Password))
+		if err != nil {
+			return nil, err
+		}
+
+		certBytes, err := ioutil.ReadFile(c.CertPath)
+		if err != nil {
+			return nil, err
+		}
+
+		cert, err = tls.X509KeyPair(certBytes, decBytes)
+	}
+
 	if err != nil {
 		return nil, err
 	}
