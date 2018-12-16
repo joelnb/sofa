@@ -62,6 +62,11 @@ func (m *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
+	// Invoke the observer with the intercepted http.Request and matched mock
+	if config.Observer != nil {
+		config.Observer(req, mock)
+	}
+
 	// Verify if should use real networking
 	networking := shouldUseNetwork(req, mock)
 	if !networking && mock == nil {

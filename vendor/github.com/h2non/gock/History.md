@@ -1,4 +1,37 @@
 
+## v1.0.12 / 2018-11-13
+
+  * Fix possible data race. (#41)
+
+## v1.0.11 / 2018-10-29
+
+  * Do not reset response body (#40)
+  * refactor(travis): remove unsupported versions for golint based on Go release policy support
+  * feat(gock): add gock.Observe to support inspection of the outgoing intercepted HTTP traffic (#38)
+
+## v1.0.10 / 2018-09-09
+
+  * Support multiple response headers with same name #35 (#36)
+
+## v1.0.9 / 2018-06-14
+
+  * fix(url-encoding) add exact match test in MatchPath (#34)
+  * fix(travis): use string notation for Go versions
+
+## v1.0.8 / 2018-02-28
+
+  * chore(LICENSE): update year ;)
+  * feat(docs): add additional tips and examples
+  * feat(gock): ignore already intercepted http.Client
+
+## v1.0.7 / 2017-12-21
+
+  * Make MatchHost case insensitive. (#31)
+  * refactor(docs): remove codesponsor :(
+  * add example when request reply with error (#28)
+  * feat(docs): add sponsor ad
+  * Add example networking partially enabled (#23)
+
 ## v1.0.6 / 2017-07-27
 
   * fix(#23): mock transport deadlock
