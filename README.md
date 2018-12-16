@@ -8,7 +8,18 @@ View the [full documentation](https://godoc.org/github.com/joelnb/sofa).
 
 Create a new database:
 
-    conn, err := sofa.NewConnection("http://localhost:5984", 10*time.Second, NullAuthenticator())
+```go
+package main
+
+import (
+    "time"
+    "fmt"
+
+    "github.com/joelnb/sofa"
+)
+
+func main() {
+    conn, err := sofa.NewConnection("http://localhost:5984", 10*time.Second, sofa.NullAuthenticator())
     if err != nil {
         panic(err)
     }
@@ -18,9 +29,24 @@ Create a new database:
         panic(err)
     }
 
-Add a document to an existing database:
+    fmt.Println(db)
+}
+```
 
-    conn, err := sofa.NewConnection("http://localhost:5984", 10*time.Second, NullAuthenticator())
+Add a document to an existing database (and the retrieve it again):
+
+```go
+package main
+
+import (
+    "time"
+    "fmt"
+
+    "github.com/joelnb/sofa"
+)
+
+func main() {
+    conn, err := sofa.NewConnection("http://localhost:5984", 10*time.Second, sofa.NullAuthenticator())
     if err != nil {
         panic(err)
     }
@@ -28,11 +54,11 @@ Add a document to an existing database:
     db := conn.Database("example_db")
 
     doc := &struct {
-        DocumentMetadata
+        sofa.DocumentMetadata
         Name string `json:"name"`
         Type string `json:"type"`
     }{
-        DocumentMetadata: DocumentMetadata{
+        DocumentMetadata: sofa.DocumentMetadata{
             ID: "fruit1",
         },
         Name: "apple",
@@ -43,6 +69,24 @@ Add a document to an existing database:
     if err != nil {
         panic(err)
     }
+
+    fmt.Println(rev)
+
+    getDoc := &struct {
+        sofa.DocumentMetadata
+        Name string `json:"name"`
+        Type string `json:"type"`
+    }{}
+
+    getRev, err := db.Get(getDoc, "fruit1", "")
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Println(getRev)
+    fmt.Println(getDoc.Metadata().Rev)
+}
+```
 
 ## Limitations
 
