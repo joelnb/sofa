@@ -108,6 +108,30 @@ func TestConnectionServerInfo(t *testing.T) {
 	st.Assert(t, info.Vendor["version"].(string), "1.6.1")
 }
 
+func TestConnectionServerInfo2(t *testing.T) {
+	defer gock.Off()
+
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version2MockHost)).
+		Get("/").
+		Reply(200).
+		JSON(map[string]interface{}{
+			"couchdb":  "Welcome",
+			"features": []string{"scheduler"},
+			"version":  "2.1.2",
+			"vendor":   map[string]string{"name": "The Apache Software Foundation"},
+		})
+
+	con := globalTestConnections.Version2(t, true)
+
+	info, err := con.ServerInfo()
+	st.Assert(t, err, nil)
+
+	st.Assert(t, info.CouchDB, "Welcome")
+	st.Assert(t, info.Features, []string{"scheduler"})
+	st.Assert(t, info.Version, "2.1.2")
+	st.Assert(t, info.Vendor["name"].(string), "The Apache Software Foundation")
+}
+
 func TestConnectionListDatabases(t *testing.T) {
 	defer gock.Off()
 

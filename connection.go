@@ -225,8 +225,16 @@ func (con *Connection) Ping() error {
 
 // ServerInfo gets the information about this CouchDB instance returned when accessing the root
 // page
-func (con *Connection) ServerInfo() (ServerDetails, error) {
-	d := ServerDetails{}
+func (con *CouchDB1Connection) ServerInfo() (ServerDetails1, error) {
+	d := ServerDetails1{}
+	_, err := con.unmarshalRequest("GET", "/", NewURLOptions(), nil, &d)
+	return d, err
+}
+
+// ServerInfo gets the information about this CouchDB instance returned when accessing the root
+// page
+func (con *CouchDB2Connection) ServerInfo() (ServerDetails2, error) {
+	d := ServerDetails2{}
 	_, err := con.unmarshalRequest("GET", "/", NewURLOptions(), nil, &d)
 	return d, err
 }

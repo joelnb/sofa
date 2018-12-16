@@ -4,13 +4,22 @@ import (
 	"net/http"
 )
 
-// ServerDetails represents the details returned from a CouchDB server when
+// ServerDetails1 represents the details returned from a CouchDB version 1 server when
 // requesting the root page.
-type ServerDetails struct {
+type ServerDetails1 struct {
 	CouchDB string                 `json:"couchdb"`
 	UUID    string                 `json:"uuid"`
 	Version string                 `json:"version"`
 	Vendor  map[string]interface{} `json:"vendor"`
+}
+
+// ServerDetails2 represents the details returned from a CouchDB version 2 server when
+// requesting the root page.
+type ServerDetails2 struct {
+	CouchDB  string                 `json:"couchdb"`
+	Features []string               `json:"features"`
+	Version  string                 `json:"version"`
+	Vendor   map[string]interface{} `json:"vendor"`
 }
 
 // ServerResponse is a parsed CouchDB response which also contains a RawResponse
