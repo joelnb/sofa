@@ -1,9 +1,0 @@
-package: github.com/joelnb/sofa
-import:
-- package: github.com/google/go-querystring
-  subpackages:
-  - query
-testImport:
-- package: github.com/h2non/gock
-  version: ^1.0.3
-- package: github.com/nbio/st

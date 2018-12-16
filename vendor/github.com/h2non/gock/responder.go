@@ -3,6 +3,7 @@ package gock
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -71,8 +72,10 @@ func createResponse(req *http.Request) *http.Response {
 
 // mergeHeaders copies the mock headers.
 func mergeHeaders(res *http.Response, mres *Response) http.Header {
-	for key := range mres.Header {
-		res.Header.Set(key, mres.Header.Get(key))
+	for key, values := range mres.Header {
+		for _, value := range values {
+			res.Header.Add(key, value)
+		}
 	}
 	return res.Header
 }
@@ -80,24 +83,5 @@ func mergeHeaders(res *http.Response, mres *Response) http.Header {
 // createReadCloser creates an io.ReadCloser from a byte slice that is suitable for use as an
 // http response body.
 func createReadCloser(body []byte) io.ReadCloser {
-	return &dummyReadCloser{body: bytes.NewReader(body)}
-}
-
-// dummyReadCloser is used internally as io.ReadCloser capable interface for bodies.
-type dummyReadCloser struct {
-	body io.ReadSeeker
-}
-
-// Read implements the required method by io.ReadClose interface.
-func (d *dummyReadCloser) Read(p []byte) (n int, err error) {
-	n, err = d.body.Read(p)
-	if err == io.EOF {
-		d.body.Seek(0, 0)
-	}
-	return n, err
-}
-
-// Close implements a no-op required method by io.ReadClose interface.
-func (d *dummyReadCloser) Close() error {
-	return nil
+	return ioutil.NopCloser(bytes.NewReader(body))
 }

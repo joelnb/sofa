@@ -2,17 +2,18 @@
 
 Versatile HTTP mocking made easy in [Go](https://golang.org).
 
-Heavily inspired by [nock](https://github.com/node-nock/nock). See also its Python port, [pook](https://github.com/h2non/pook).
+Heavily inspired by [nock](https://github.com/node-nock/nock).
+See also its Python port, [pook](https://github.com/h2non/pook).
 
-Take a look to the [examples](#examples) to get started.
+To get started, take a look to the [examples](#examples).
 
 ## Features
 
 - Simple, expressive, fluent API.
-- Semantic DSL for easy HTTP mocks definition.
+- Semantic API DSL for declarative HTTP mock declarations.
 - Built-in helpers for easy JSON/XML mocking.
-- Supports persistent and volatile mocks.
-- Full regexp capable HTTP request matching.
+- Supports persistent and volatile TTL-limited mocks.
+- Full regular expressions capable HTTP request mock matching.
 - Designed for both testing and runtime scenarios.
 - Match request by method, URL params, headers and bodies.
 - Extensible and pluggable HTTP matching rules.
@@ -66,7 +67,8 @@ func TestFoo(t *testing.T) {
 If you're running concurrent code, be aware that your mocks are declared first to avoid unexpected
 race conditions while configuring `gock` or intercepting custom HTTP clients.
 
-`gock` is not fully thread-safe, but sensible parts are. Any help making `gock` more reliable in this sense is highly appreciated.
+`gock` is not fully thread-safe, but sensible parts are.
+Any help making `gock` more reliable in this sense is appreciated.
 
 #### Define complex mocks first
 
@@ -74,6 +76,44 @@ If you're mocking a bunch of mocks in the same test suite, it's recommended to d
 concrete mocks first, and then the generic ones.
 
 This approach usually avoids matching unexpected generic mocks (e.g: specific header, body payload...) instead of the generic ones that performs less complex matches.
+
+#### Disable `gock` traffic interception once done
+
+In other to minimize potential side effects within your test code, it's a good practice
+disabling `gock` once you are done with your HTTP testing logic.
+
+A Go idiomatic approach for doing this can be using it in a `defer` statement, such as:
+
+```go
+function TestGock (t *testing.T) {
+	defer gock.Off()
+
+	// ... my test code goes here
+}
+```
+
+#### Intercept an `http.Client` just once
+
+You don't need to intercept multiple times the same `http.Client` instance.
+
+Just call `gock.InterceptClient(client)` once, typically at the beginning of your test scenarios.
+
+#### Restore an `http.Client` after interception
+
+**NOTE**: this is not required is you are using `http.DefaultClient` or `http.DefaultTransport`.
+
+As a good testing pattern, you should call `gock.RestoreClient(client)` after running your test scenario, typically as after clean up hook.
+
+You can also use a `defer` statement for doing it, as you do with `gock.Off()`, such as:
+
+```go
+function TestGock (t *testing.T) {
+	defer gock.Off()
+	defer gock.RestoreClient(client)
+
+	// ... my test code goes here
+}
+```
 
 ## Examples
 
@@ -261,6 +301,33 @@ func main() {
   // Verify that we don't have pending mocks
   st.Expect(t, gock.IsDone(), true)
 }
+```
+
+#### Debug intercepted http requests
+
+```go
+package main
+
+import (
+	"bytes"
+	"gopkg.in/h2non/gock.v1"
+	"net/http"
+)
+
+func main() {
+	defer gock.Off()
+	gock.Observe(gock.DumpRequest)
+
+	gock.New("http://foo.com").
+		Post("/bar").
+		MatchType("json").
+		JSON(map[string]string{"foo": "bar"}).
+		Reply(200)
+
+	body := bytes.NewBuffer([]byte(`{"foo":"bar"}`))
+	http.Post("http://foo.com/bar", "application/json", body)
+}
+
 ```
 
 ## Hacking it!

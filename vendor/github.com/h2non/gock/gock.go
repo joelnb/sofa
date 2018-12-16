@@ -1,7 +1,9 @@
 package gock
 
 import (
+	"fmt"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"regexp"
 	"sync"
@@ -14,7 +16,19 @@ var mutex = &sync.Mutex{}
 var config = struct {
 	Networking        bool
 	NetworkingFilters []FilterRequestFunc
+	Observer          ObserverFunc
 }{}
+
+// ObserverFunc is implemented by users to inspect the outgoing intercepted HTTP traffic
+type ObserverFunc func(*http.Request, Mock)
+
+// DumpRequest is a default implementation of ObserverFunc that dumps
+// the HTTP/1.x wire representation of the http request
+var DumpRequest ObserverFunc = func(request *http.Request, mock Mock) {
+	bytes, _ := httputil.DumpRequestOut(request, true)
+	fmt.Println(string(bytes))
+	fmt.Printf("\nMatches: %v\n---\n", mock != nil)
+}
 
 // track unmatched requests so they can be tested for
 var unmatchedRequests = []*http.Request{}
@@ -38,6 +52,8 @@ func New(uri string) *Request {
 
 // Intercepting returns true if gock is currently able to intercept.
 func Intercepting() bool {
+	mutex.Lock()
+	defer mutex.Unlock()
 	return http.DefaultTransport == DefaultTransport
 }
 
@@ -52,6 +68,10 @@ func Intercept() {
 // InterceptClient allows the developer to intercept HTTP traffic using
 // a custom http.Client who uses a non default http.Transport/http.RoundTripper implementation.
 func InterceptClient(cli *http.Client) {
+	_, ok := cli.Transport.(*Transport)
+	if ok {
+		return // if transport already intercepted, just ignore it
+	}
 	trans := NewTransport()
 	trans.Transport = cli.Transport
 	cli.Transport = trans
@@ -86,6 +106,13 @@ func OffAll() {
 	Flush()
 	Disable()
 	CleanUnmatchedRequest()
+}
+
+// Observe provides a hook to support inspection of the request and matched mock
+func Observe(fn ObserverFunc) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	config.Observer = fn
 }
 
 // EnableNetworking enables real HTTP networking
