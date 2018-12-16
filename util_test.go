@@ -66,3 +66,32 @@ func TestFutonURL(t *testing.T) {
 	res6 := urlConcat(altServerURL, "_utils/database.html?database_name/_design/myDesign/_theDocument")
 	st.Expect(t, res6, u6.String())
 }
+
+func TestFauxtonURL(t *testing.T) {
+	conn := globalTestConnections.Version2(t, true)
+	baseURL := conn.URL("/")
+
+	uA := conn.FauxtonURL("/database_name")
+	resA := urlConcat(baseURL.String(), "_utils/#database/database_name")
+	st.Expect(t, resA, uA.String())
+
+	uB := conn.FauxtonURL("/database_name/document_name")
+	resB := urlConcat(baseURL.String(), "_utils/#database/database_name/document_name")
+	st.Expect(t, resB, uB.String())
+
+	uC := conn.FauxtonURL("/database_name/document_name/")
+	resC := urlConcat(baseURL.String(), "_utils/#database/database_name/document_name/")
+	st.Expect(t, resC, uC.String())
+
+	uD := conn.FauxtonURL("/database_name/document_name/attachment_name")
+	resD := urlConcat(baseURL.String(), "_utils/#database/database_name/document_name/attachment_name")
+	st.Expect(t, resD, uD.String())
+
+	uE := conn.FauxtonURL("/database_name/_all_docs")
+	resE := urlConcat(baseURL.String(), "_utils/#database/database_name/_all_docs")
+	st.Expect(t, resE, uE.String())
+
+	uF := conn.FauxtonURL("/database_name/_design/myDesign/_theDocument")
+	resF := urlConcat(baseURL.String(), "_utils/#database/database_name/_design/myDesign/_theDocument")
+	st.Expect(t, resF, uF.String())
+}
