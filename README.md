@@ -19,17 +19,20 @@ import (
 )
 
 func main() {
+    // Make the connection with no authentication
     conn, err := sofa.NewConnection("http://localhost:5984", 10*time.Second, sofa.NullAuthenticator())
     if err != nil {
         panic(err)
     }
 
+    // Create a new database
     db, err := conn.CreateDatabase("example_db")
     if err != nil {
         panic(err)
     }
 
-    fmt.Println(db)
+    // Show the format of the Database struct
+    fmt.Printf("%+v\n", db)
 }
 ```
 
@@ -45,19 +48,23 @@ import (
     "github.com/joelnb/sofa"
 )
 
+type Fruit struct {
+    sofa.DocumentMetadata
+    Name string `json:"name"`
+    Type string `json:"type"`
+}
+
 func main() {
     conn, err := sofa.NewConnection("http://localhost:5984", 10*time.Second, sofa.NullAuthenticator())
     if err != nil {
         panic(err)
     }
 
+    // Open the previously-created database
     db := conn.Database("example_db")
 
-    doc := &struct {
-        sofa.DocumentMetadata
-        Name string `json:"name"`
-        Type string `json:"type"`
-    }{
+    // Create a document to save
+    doc := &Fruit{
         DocumentMetadata: sofa.DocumentMetadata{
             ID: "fruit1",
         },
@@ -65,26 +72,29 @@ func main() {
         Type: "fruit",
     }
 
+    // Create the document on the CouchDB server
     rev, err := db.Put(doc)
     if err != nil {
         panic(err)
     }
 
+    // Show the revision which has been created
     fmt.Println(rev)
 
-    getDoc := &struct {
-        sofa.DocumentMetadata
-        Name string `json:"name"`
-        Type string `json:"type"`
-    }{}
-
+    // Retrieve the document which was created
+    getDoc := &Fruit{}
     getRev, err := db.Get(getDoc, "fruit1", "")
     if err != nil {
         panic(err)
     }
 
-    fmt.Println(getRev)
-    fmt.Println(getDoc.Metadata().Rev)
+    // Is the document we put there the same revision we got back?
+    if getRev != rev {
+        panic("someone changed the document while this was running")
+    }
+
+    // Show the struct which was returned from the DB
+    fmt.Printf("%+v\n", getDoc)
 }
 ```
 
