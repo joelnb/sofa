@@ -1,6 +1,7 @@
 package sofa
 
 import (
+	"crypto"
 	"crypto/hmac"
 	"crypto/sha1"
 	"crypto/tls"
@@ -13,6 +14,8 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"strings"
+
+	"github.com/youmark/pkcs8"
 
 	// Authentication with certificates can break if this is not included even though no methods
 	// are called directly.
@@ -156,6 +159,11 @@ func (c *clientCertAuthenticator) Client() (*http.Client, error) {
 	if c.Password == "" {
 		cert, err = tls.LoadX509KeyPair(c.CertPath, c.KeyPath)
 	} else {
+		certBytes, readErr := ioutil.ReadFile(c.CertPath)
+		if readErr != nil {
+			return nil, readErr
+		}
+
 		keyBytes, readErr := ioutil.ReadFile(c.KeyPath)
 		if readErr != nil {
 			return nil, readErr
@@ -166,18 +174,53 @@ func (c *clientCertAuthenticator) Client() (*http.Client, error) {
 			return nil, errors.New("expecting a PEM block in encrypted private key file")
 		}
 
+		pwBytes := []byte(c.Password)
 		//nolint // DecryptPEMBlock may be insecure (as the warning says) but use can be required to integrate with existing systems
-		decBytes, decErr := x509.DecryptPEMBlock(pemBlock, []byte(c.Password))
+		decBytes, decErr := x509.DecryptPEMBlock(pemBlock, pwBytes)
 		if decErr != nil {
-			return nil, decErr
-		}
+			var myPkey crypto.PrivateKey
+			rsaKey, rsaPKLoadErr := pkcs8.ParsePKCS8PrivateKeyRSA(pemBlock.Bytes, pwBytes)
+			if rsaPKLoadErr != nil {
+				ecdsaKey, ecdsaPKLoadErr := pkcs8.ParsePKCS8PrivateKeyECDSA(pemBlock.Bytes, pwBytes)
 
-		certBytes, readErr := ioutil.ReadFile(c.CertPath)
-		if readErr != nil {
-			return nil, readErr
-		}
+				if ecdsaPKLoadErr != nil {
+					return nil, ecdsaPKLoadErr
+				} else {
+					myPkey = ecdsaKey
+					// fmt.Println("ECDSA")
+				}
 
-		cert, err = tls.X509KeyPair(certBytes, decBytes)
+				// return nil, pkErr
+			} else {
+				myPkey = rsaKey
+				// fmt.Println("RSA")
+			}
+
+			cert = tls.Certificate{}
+			certPEMBlock := certBytes
+
+			for {
+				var certDERBlock *pem.Block
+				certDERBlock, certPEMBlock = pem.Decode(certPEMBlock)
+
+				if certDERBlock == nil {
+					break
+				}
+
+				if certDERBlock.Type == "CERTIFICATE" {
+					cert.Certificate = append(cert.Certificate, certDERBlock.Bytes)
+				}
+			}
+
+			cert.PrivateKey = myPkey
+
+			// return nil, decErr
+		} else {
+			pemBlock.Bytes = decBytes
+			pemBlock.Headers = nil
+
+			cert, err = tls.X509KeyPair(certBytes, pem.EncodeToMemory(pemBlock))
+		}
 	}
 
 	if err != nil {
