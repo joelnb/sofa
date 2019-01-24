@@ -119,9 +119,9 @@ func (c *clientCertAuthenticator) Client() (*http.Client, error) {
 	if c.Password == "" {
 		cert, err = tls.LoadX509KeyPair(c.CertPath, c.KeyPath)
 	} else {
-		keyBytes, err := ioutil.ReadFile(c.KeyPath)
-		if err != nil {
-			return nil, err
+		keyBytes, readErr := ioutil.ReadFile(c.KeyPath)
+		if readErr != nil {
+			return nil, readErr
 		}
 
 		pemBlock, _ := pem.Decode(keyBytes)
@@ -129,14 +129,14 @@ func (c *clientCertAuthenticator) Client() (*http.Client, error) {
 			return nil, errors.New("expecting a PEM block in encrypted private key file")
 		}
 
-		decBytes, err := x509.DecryptPEMBlock(pemBlock, []byte(c.Password))
-		if err != nil {
-			return nil, err
+		decBytes, decErr := x509.DecryptPEMBlock(pemBlock, []byte(c.Password))
+		if decErr != nil {
+			return nil, decErr
 		}
 
-		certBytes, err := ioutil.ReadFile(c.CertPath)
-		if err != nil {
-			return nil, err
+		certBytes, readErr := ioutil.ReadFile(c.CertPath)
+		if readErr != nil {
+			return nil, readErr
 		}
 
 		cert, err = tls.X509KeyPair(certBytes, decBytes)
