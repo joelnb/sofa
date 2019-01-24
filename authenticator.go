@@ -211,7 +211,11 @@ func ProxyAuthenticator(username string, roles []string, secret string) Authenti
 
 	if secret != "" {
 		mac := hmac.New(sha1.New, []byte(secret))
-		io.WriteString(mac, username)
+		_, err := io.WriteString(mac, username)
+		if err != nil {
+			panic(err)
+		}
+
 		token = fmt.Sprintf("%x", mac.Sum(nil))
 	}
 
