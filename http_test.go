@@ -84,7 +84,10 @@ func TestEncodeOptions(t *testing.T) {
 
 	for n, tc := range singleTests {
 		opts := NewURLOptions()
-		opts.Add(tc.name, tc.value)
+		err := opts.Add(tc.name, tc.value)
+		if err != nil {
+			t.Error(err)
+		}
 
 		st.Expect(t, opts.Encode(), tc.expectedResult, n)
 	}

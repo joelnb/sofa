@@ -41,7 +41,7 @@ func (con *Connection) User(id string, rev string) (UserDocument, error) {
 	db := con.Database("_users")
 
 	user := UserDocument{}
-	rev, err := db.Get(&user, id, rev)
+	_, err := db.Get(&user, id, rev)
 	if err != nil {
 		return user, err
 	}

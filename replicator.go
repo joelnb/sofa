@@ -68,7 +68,7 @@ func (con *Connection) Replication(id, rev string) (Replication, error) {
 	db := con.Database("_replicator")
 
 	repl := Replication{}
-	rev, err := db.Get(&repl, id, rev)
+	_, err := db.Get(&repl, id, rev)
 	if err != nil {
 		return repl, err
 	}
