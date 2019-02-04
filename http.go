@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strings"
 )
 
@@ -95,11 +94,16 @@ func newRequest(method, url string, body io.Reader) (*http.Request, error) {
 
 // encodeValue encodes a value as JSON unless it is already a string
 func encodeValue(val interface{}) (string, error) {
-	rv := reflect.ValueOf(val)
-	switch rv.Kind() {
-	case reflect.String:
-		return rv.String(), nil
+	switch t := val.(type) {
+	case BooleanParameter:
+		return t.String(), nil
 	}
+
+	// rv := reflect.ValueOf(val)
+	// switch rv.Kind() {
+	// case reflect.String:
+	// 	return rv.String(), nil
+	// }
 
 	bytes, err := json.Marshal(val)
 	if err != nil {

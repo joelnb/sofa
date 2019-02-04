@@ -11,6 +11,10 @@ import (
 // the default values of a parameter.
 type BooleanParameter string
 
+func (b BooleanParameter) String() string {
+	return string(b)
+}
+
 const (
 	// Empty is the zero value for the BooleanParameter type. It is the default
 	// type and values of this type are not included in the URL parameters.
@@ -155,33 +159,18 @@ func (v *ViewParams) URLOptions() (*URLOptions, error) {
 	// Process interfaces
 	if v.StartKey != nil {
 		val := v.StartKey
-		switch val.(type) {
-		case string:
-			val = fmt.Sprintf("\"%s\"", val)
-		}
-
 		if err := u.Set("startkey", val); err != nil {
 			return nil, err
 		}
 	}
 	if v.EndKey != nil {
 		val := v.EndKey
-		switch val.(type) {
-		case string:
-			val = fmt.Sprintf("\"%s\"", val)
-		}
-
 		if err := u.Set("endkey", val); err != nil {
 			return nil, err
 		}
 	}
 	if v.Key != nil {
 		val := v.Key
-		switch val.(type) {
-		case string:
-			val = fmt.Sprintf("\"%s\"", val)
-		}
-
 		if err := u.Set("key", val); err != nil {
 			return nil, err
 		}
