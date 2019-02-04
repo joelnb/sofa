@@ -86,6 +86,15 @@ func (f PollingChangesFeed) Next(params ChangesFeedParams) (ChangesFeedUpdate, e
 		return ChangesFeedUpdate{}, err
 	}
 
+	if params.DocumentIDs != nil {
+		jBytes, err := json.Marshal(params.DocumentIDs)
+		if err != nil {
+			return ChangesFeedUpdate{}, err
+		}
+
+		v.Set("doc_ids", string(jBytes))
+	}
+
 	var u ChangesFeedUpdate
 	_, err = f.db.con.unmarshalRequest("GET", f.db.ViewPath("_changes"), v, nil, &u)
 	return u, err
