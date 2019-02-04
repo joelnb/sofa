@@ -154,17 +154,35 @@ func (v *ViewParams) URLOptions() (*URLOptions, error) {
 
 	// Process interfaces
 	if v.StartKey != nil {
-		if err := u.Set("startkey", v.StartKey); err != nil {
+		val := v.StartKey
+		switch val.(type) {
+		case string:
+			val = fmt.Sprintf("\"%s\"", val)
+		}
+
+		if err := u.Set("startkey", val); err != nil {
 			return nil, err
 		}
 	}
 	if v.EndKey != nil {
-		if err := u.Set("endkey", v.EndKey); err != nil {
+		val := v.EndKey
+		switch val.(type) {
+		case string:
+			val = fmt.Sprintf("\"%s\"", val)
+		}
+
+		if err := u.Set("endkey", val); err != nil {
 			return nil, err
 		}
 	}
 	if v.Key != nil {
-		if err := u.Set("key", v.Key); err != nil {
+		val := v.Key
+		switch val.(type) {
+		case string:
+			val = fmt.Sprintf("\"%s\"", val)
+		}
+
+		if err := u.Set("key", val); err != nil {
 			return nil, err
 		}
 	}
