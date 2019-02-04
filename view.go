@@ -27,6 +27,19 @@ const (
 	False BooleanParameter = "false"
 )
 
+type InterfaceParameter struct {
+	innerVal interface{}
+}
+
+func (i InterfaceParameter) String() string {
+	out, err := json.Marshal(i.innerVal)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(out)
+}
+
 // ViewParams provides a type-safe implementation of the paramaters which may
 // be passed to an execution of a CouchDB view function:
 //  - conflicts (boolean) – Includes conflicts information in response.
@@ -79,26 +92,26 @@ const (
 //    indicating which sequence id of the database the view reflects.
 //    Default is false
 type ViewParams struct {
-	Conflicts              BooleanParameter `url:"conflicts,omitempty"`
-	Descending             BooleanParameter `url:"descending,omitempty"`
-	EndKey                 interface{}      `url:"endkey,omitempty"`
-	EndKeyDocID            string           `url:"endkey_docid,omitempty"`
-	Group                  BooleanParameter `url:"group,omitempty"`
-	GroupLevel             float64          `url:"group_level,omitempty"`
-	IncludeDocs            BooleanParameter `url:"include_docs,omitempty"`
-	Attachments            BooleanParameter `url:"attachments,omitempty"`
-	AttachmentEncodingInfo BooleanParameter `url:"att_encoding_info,omitempty"`
-	InclusiveEnd           BooleanParameter `url:"inclusive_end,omitempty"`
-	Key                    interface{}      `url:"key,omitempty"`
-	Keys                   []interface{}    `url:"keys,omitempty"`
-	Limit                  float64          `url:"limit,omitempty"`
-	Reduce                 BooleanParameter `url:"reduce,omitempty"`
-	Skip                   float64          `url:"skip,omitempty"`
-	Sorted                 BooleanParameter `url:"sorted,omitempty"`
-	Stale                  string           `url:"stale,omitempty"`
-	StartKey               interface{}      `url:"startkey,omitempty"`
-	StartKeyDocID          string           `url:"startkey_docid,omitempty"`
-	UpdateSeq              BooleanParameter `url:"update_seq,omitempty"`
+	Conflicts              BooleanParameter    `url:"conflicts,omitempty"`
+	Descending             BooleanParameter    `url:"descending,omitempty"`
+	EndKey                 *InterfaceParameter `url:"endkey,omitempty"`
+	EndKeyDocID            string              `url:"endkey_docid,omitempty"`
+	Group                  BooleanParameter    `url:"group,omitempty"`
+	GroupLevel             float64             `url:"group_level,omitempty"`
+	IncludeDocs            BooleanParameter    `url:"include_docs,omitempty"`
+	Attachments            BooleanParameter    `url:"attachments,omitempty"`
+	AttachmentEncodingInfo BooleanParameter    `url:"att_encoding_info,omitempty"`
+	InclusiveEnd           BooleanParameter    `url:"inclusive_end,omitempty"`
+	Key                    *InterfaceParameter `url:"key,omitempty"`
+	Keys                   []interface{}       `url:"keys,omitempty"`
+	Limit                  float64             `url:"limit,omitempty"`
+	Reduce                 BooleanParameter    `url:"reduce,omitempty"`
+	Skip                   float64             `url:"skip,omitempty"`
+	Sorted                 BooleanParameter    `url:"sorted,omitempty"`
+	Stale                  string              `url:"stale,omitempty"`
+	StartKey               *InterfaceParameter `url:"startkey,omitempty"`
+	StartKeyDocID          string              `url:"startkey_docid,omitempty"`
+	UpdateSeq              BooleanParameter    `url:"update_seq,omitempty"`
 }
 
 func (v *ViewParams) URLOptions() (*URLOptions, error) {
@@ -158,20 +171,17 @@ func (v *ViewParams) URLOptions() (*URLOptions, error) {
 
 	// Process interfaces
 	if v.StartKey != nil {
-		val := v.StartKey
-		if err := u.Set("startkey", val); err != nil {
+		if err := u.Set("startkey", v.StartKey); err != nil {
 			return nil, err
 		}
 	}
 	if v.EndKey != nil {
-		val := v.EndKey
-		if err := u.Set("endkey", val); err != nil {
+		if err := u.Set("endkey", v.EndKey); err != nil {
 			return nil, err
 		}
 	}
 	if v.Key != nil {
-		val := v.Key
-		if err := u.Set("key", val); err != nil {
+		if err := u.Set("key", v.Key); err != nil {
 			return nil, err
 		}
 	}

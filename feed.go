@@ -121,6 +121,15 @@ func (f *ContinuousChangesFeed) Next() (ChangesFeedChange, error) {
 			return ChangesFeedChange{}, err
 		}
 
+		if f.params.DocumentIDs != nil {
+			jBytes, err := json.Marshal(f.params.DocumentIDs)
+			if err != nil {
+				return ChangesFeedChange{}, err
+			}
+
+			v.Set("doc_ids", string(jBytes))
+		}
+
 		resp, err := f.db.con.urlRequest("GET", f.db.con.URL(f.db.ViewPath("_changes")), v, nil, false)
 		if err != nil {
 			return ChangesFeedChange{}, err
