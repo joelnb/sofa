@@ -27,17 +27,25 @@ const (
 	False BooleanParameter = "false"
 )
 
+// InterfaceParameter is a wrapper for an empty interface which ensures that it is correctly formatted when passed
+// as a query parameter to CouchDB. The reason for this is that strings passed are usually required not to be quoted
+// but in these fields which can also take JSON objects of other types the quotes seem required
 type InterfaceParameter struct {
 	innerVal interface{}
 }
 
-func (i InterfaceParameter) String() string {
-	out, err := json.Marshal(i.innerVal)
-	if err != nil {
-		panic(err)
+// NewInterfaceParameter returns a pointer to an InterfaceParameter wrapping the provided value. All new
+// InterfaceParameters must be created through this function.
+func NewInterfaceParameter(iface interface{}) *InterfaceParameter {
+	return &InterfaceParameter{
+		innerVal: iface,
 	}
+}
 
-	return string(out)
+// MarshalJSON simply marshals the internal value, to ensure these objects are always included using the
+// JSON-formatted representation of just the inner value.
+func (i InterfaceParameter) MarshalJSON() ([]byte, error) {
+	return json.Marshal(i.innerVal)
 }
 
 // ViewParams provides a type-safe implementation of the paramaters which may
@@ -114,6 +122,8 @@ type ViewParams struct {
 	UpdateSeq              BooleanParameter    `url:"update_seq,omitempty"`
 }
 
+// URLOptions creates a URLOptions instance containing all of the currently-set values for this ViewParams
+// instance.
 func (v *ViewParams) URLOptions() (*URLOptions, error) {
 	u := NewURLOptions()
 
