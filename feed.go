@@ -100,18 +100,9 @@ type PollingChangesFeed struct {
 func (f PollingChangesFeed) Next(params ChangesFeedParams) (ChangesFeedUpdate, error) {
 	params.Feed = f.feedType
 
-	v, err := query.Values(params)
+	v, err := params.Values()
 	if err != nil {
 		return ChangesFeedUpdate{}, err
-	}
-
-	if params.DocumentIDs != nil {
-		jBytes, err := json.Marshal(params.DocumentIDs)
-		if err != nil {
-			return ChangesFeedUpdate{}, err
-		}
-
-		v.Set("doc_ids", string(jBytes))
 	}
 
 	var u ChangesFeedUpdate
@@ -135,18 +126,9 @@ func (f *ContinuousChangesFeed) Next() (ChangesFeedChange, error) {
 	if f.resp == nil {
 		f.params.Feed = string(FeedContinuous)
 
-		v, err := query.Values(f.params)
+		v, err := f.params.Values()
 		if err != nil {
 			return ChangesFeedChange{}, err
-		}
-
-		if f.params.DocumentIDs != nil {
-			jBytes, err := json.Marshal(f.params.DocumentIDs)
-			if err != nil {
-				return ChangesFeedChange{}, err
-			}
-
-			v.Set("doc_ids", string(jBytes))
 		}
 
 		resp, err := f.db.con.urlRequest("GET", f.db.con.URL(f.db.ViewPath("_changes")), v, nil, false)
