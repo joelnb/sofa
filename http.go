@@ -95,25 +95,10 @@ func newRequest(method, url string, body io.Reader) (*http.Request, error) {
 
 // encodeValue encodes a value as JSON unless it is already a string
 func encodeValue(val interface{}) (string, error) {
-	interfaceString := false
-
-	switch t := val.(type) {
-	case InterfaceParameter:
-		interfaceString = true
-	case BooleanParameter:
-		return t.String(), nil
-	}
-
 	rv := reflect.ValueOf(val)
 	switch rv.Kind() {
 	case reflect.String:
-		out := rv.String()
-
-		if interfaceString {
-			out = fmt.Sprintf("\"%s\"", out)
-		}
-
-		return out, nil
+		return rv.String(), nil
 	}
 
 	bytes, err := json.Marshal(val)

@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/url"
+
+	"github.com/google/go-querystring/query"
 )
 
 // BooleanParameter is a special type of boolean created to have a zero value
@@ -45,6 +48,37 @@ func NewInterfaceParameter(iface interface{}) *InterfaceParameter {
 // MarshalJSON simply marshals the internal value, to ensure these objects are always included using the
 // JSON-formatted representation of just the inner value.
 func (i InterfaceParameter) MarshalJSON() ([]byte, error) {
+	return json.Marshal(i.innerVal)
+}
+
+func (i InterfaceParameter) EncodeValues(key string, v *url.Values) error {
+	bytes, err := json.Marshal(i.innerVal)
+	if err != nil {
+		return err
+	}
+
+	v.Set(key, string(bytes))
+
+	return nil
+}
+
+type InterfaceListParameter struct {
+	innerVal []*InterfaceParameter
+}
+
+func NewInterfaceListParameter(ifaces []interface{}) *InterfaceListParameter {
+	iList := InterfaceListParameter{}
+	iList.innerVal = []*InterfaceParameter{}
+
+	for _, i := range ifaces {
+		iList.innerVal = append(iList.innerVal, NewInterfaceParameter(i))
+	}
+
+	return &iList
+}
+
+// MarshalJSON simply marshals the internal value.
+func (i InterfaceListParameter) MarshalJSON() ([]byte, error) {
 	return json.Marshal(i.innerVal)
 }
 
@@ -100,145 +134,30 @@ func (i InterfaceParameter) MarshalJSON() ([]byte, error) {
 //    indicating which sequence id of the database the view reflects.
 //    Default is false
 type ViewParams struct {
-	Conflicts              BooleanParameter    `url:"conflicts,omitempty"`
-	Descending             BooleanParameter    `url:"descending,omitempty"`
-	EndKey                 *InterfaceParameter `url:"endkey,omitempty"`
-	EndKeyDocID            string              `url:"endkey_docid,omitempty"`
-	Group                  BooleanParameter    `url:"group,omitempty"`
-	GroupLevel             float64             `url:"group_level,omitempty"`
-	IncludeDocs            BooleanParameter    `url:"include_docs,omitempty"`
-	Attachments            BooleanParameter    `url:"attachments,omitempty"`
-	AttachmentEncodingInfo BooleanParameter    `url:"att_encoding_info,omitempty"`
-	InclusiveEnd           BooleanParameter    `url:"inclusive_end,omitempty"`
-	Key                    *InterfaceParameter `url:"key,omitempty"`
-	Keys                   []interface{}       `url:"keys,omitempty"`
-	Limit                  float64             `url:"limit,omitempty"`
-	Reduce                 BooleanParameter    `url:"reduce,omitempty"`
-	Skip                   float64             `url:"skip,omitempty"`
-	Sorted                 BooleanParameter    `url:"sorted,omitempty"`
-	Stale                  string              `url:"stale,omitempty"`
-	StartKey               *InterfaceParameter `url:"startkey,omitempty"`
-	StartKeyDocID          string              `url:"startkey_docid,omitempty"`
-	UpdateSeq              BooleanParameter    `url:"update_seq,omitempty"`
+	Conflicts              BooleanParameter        `url:"conflicts,omitempty"`
+	Descending             BooleanParameter        `url:"descending,omitempty"`
+	EndKey                 *InterfaceParameter     `url:"endkey,omitempty"`
+	EndKeyDocID            string                  `url:"endkey_docid,omitempty"`
+	Group                  BooleanParameter        `url:"group,omitempty"`
+	GroupLevel             float64                 `url:"group_level,omitempty"`
+	IncludeDocs            BooleanParameter        `url:"include_docs,omitempty"`
+	Attachments            BooleanParameter        `url:"attachments,omitempty"`
+	AttachmentEncodingInfo BooleanParameter        `url:"att_encoding_info,omitempty"`
+	InclusiveEnd           BooleanParameter        `url:"inclusive_end,omitempty"`
+	Key                    *InterfaceParameter     `url:"key,omitempty"`
+	Keys                   *InterfaceListParameter `url:"keys,omitempty"`
+	Limit                  float64                 `url:"limit,omitempty"`
+	Reduce                 BooleanParameter        `url:"reduce,omitempty"`
+	Skip                   float64                 `url:"skip,omitempty"`
+	Sorted                 BooleanParameter        `url:"sorted,omitempty"`
+	Stale                  string                  `url:"stale,omitempty"`
+	StartKey               *InterfaceParameter     `url:"startkey,omitempty"`
+	StartKeyDocID          string                  `url:"startkey_docid,omitempty"`
+	UpdateSeq              BooleanParameter        `url:"update_seq,omitempty"`
 }
 
-// URLOptions creates a URLOptions instance containing all of the currently-set values for this ViewParams
-// instance.
-func (v *ViewParams) URLOptions() (*URLOptions, error) {
-	u := NewURLOptions()
-
-	// Process booleans
-	if v.Conflicts != Empty {
-		if err := u.Set("conflicts", v.Conflicts); err != nil {
-			return nil, err
-		}
-	}
-	if v.Descending != Empty {
-		if err := u.Set("descending", v.Descending); err != nil {
-			return nil, err
-		}
-	}
-	if v.Group != Empty {
-		if err := u.Set("group", v.Group); err != nil {
-			return nil, err
-		}
-	}
-	if v.IncludeDocs != Empty {
-		if err := u.Set("include_docs", v.IncludeDocs); err != nil {
-			return nil, err
-		}
-	}
-	if v.Attachments != Empty {
-		if err := u.Set("attachments", v.Attachments); err != nil {
-			return nil, err
-		}
-	}
-	if v.AttachmentEncodingInfo != Empty {
-		if err := u.Set("att_encoding_info", v.AttachmentEncodingInfo); err != nil {
-			return nil, err
-		}
-	}
-	if v.InclusiveEnd != Empty {
-		if err := u.Set("inclusive_end", v.InclusiveEnd); err != nil {
-			return nil, err
-		}
-	}
-	if v.Reduce != Empty {
-		if err := u.Set("reduce", v.Reduce); err != nil {
-			return nil, err
-		}
-	}
-	if v.Sorted != Empty {
-		if err := u.Set("sorted", v.Sorted); err != nil {
-			return nil, err
-		}
-	}
-	if v.UpdateSeq != Empty {
-		if err := u.Set("update_seq", v.UpdateSeq); err != nil {
-			return nil, err
-		}
-	}
-
-	// Process interfaces
-	if v.StartKey != nil {
-		if err := u.Set("startkey", v.StartKey); err != nil {
-			return nil, err
-		}
-	}
-	if v.EndKey != nil {
-		if err := u.Set("endkey", v.EndKey); err != nil {
-			return nil, err
-		}
-	}
-	if v.Key != nil {
-		if err := u.Set("key", v.Key); err != nil {
-			return nil, err
-		}
-	}
-
-	// Process lists
-	if v.Keys != nil {
-		if err := u.Set("keys", v.Keys); err != nil {
-			return nil, err
-		}
-	}
-
-	// Process strings
-	if v.EndKeyDocID != "" {
-		if err := u.Set("endkey_docid", v.EndKeyDocID); err != nil {
-			return nil, err
-		}
-	}
-	if v.StartKeyDocID != "" {
-		if err := u.Set("startkey_docid", v.StartKeyDocID); err != nil {
-			return nil, err
-		}
-	}
-	if v.Stale != "" {
-		if err := u.Set("stale", v.Stale); err != nil {
-			return nil, err
-		}
-	}
-
-	// Process floats
-	// TODO: Can something better be done that checking for zero?
-	if v.GroupLevel != 0 {
-		if err := u.Set("group_level", v.GroupLevel); err != nil {
-			return nil, err
-		}
-	}
-	if v.Limit != 0 {
-		if err := u.Set("limit", v.Limit); err != nil {
-			return nil, err
-		}
-	}
-	if v.Skip != 0 {
-		if err := u.Set("skip", v.Skip); err != nil {
-			return nil, err
-		}
-	}
-
-	return &u, nil
+func (v ViewParams) Values() (url.Values, error) {
+	return query.Values(v)
 }
 
 // View is an interface representing the way that views are executed and
@@ -275,7 +194,7 @@ func (v TemporaryView) Execute(params ViewParams) (DocumentList, error) {
 		return DocumentList{}, err
 	}
 
-	opts, err := params.URLOptions()
+	opts, err := params.Values()
 	if err != nil {
 		return DocumentList{}, err
 	}
@@ -312,7 +231,7 @@ func (d *Database) NamedView(design, name string) NamedView {
 
 // Execute implements View for NamedView.
 func (v NamedView) Execute(params ViewParams) (DocumentList, error) {
-	opts, err := params.URLOptions()
+	opts, err := params.Values()
 	if err != nil {
 		return DocumentList{}, err
 	}

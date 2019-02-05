@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"net/http"
+	"net/url"
 
 	"github.com/google/go-querystring/query"
 )
@@ -67,6 +68,24 @@ type ChangesFeedParams struct {
 	Style                  string           `url:"style,omitempty"`
 	Timeout                int64            `url:"timeout,omitempty"`
 	View                   string           `url:"view,omitempty"`
+}
+
+func (params ChangesFeedParams) Values() (url.Values, error) {
+	v, err := query.Values(params)
+	if err != nil {
+		return nil, err
+	}
+
+	if params.DocumentIDs != nil {
+		jBytes, err := json.Marshal(params.DocumentIDs)
+		if err != nil {
+			return nil, err
+		}
+
+		v.Set("doc_ids", string(jBytes))
+	}
+
+	return v, nil
 }
 
 // PollingChangesFeed can be used for either type of changes feed which polls
