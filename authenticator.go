@@ -33,18 +33,23 @@ type Authenticator interface {
 	// Setup uses the provided connection to setup any authentication information which requires accessing
 	// the CouchDB server.
 	Setup(*Connection) error
+
+	// Verify sets whether verififcation of server HTTPS certs will be performed by clients created
+	// by this authenticator. The default for all authenticators should be to perform the verification
+	// unless this method is called with the argument 'false' to specifically disable it.
+	Verify(bool)
 }
 
 type nullAuthenticator struct {
 	InsecureSkipVerify bool
 }
 
-func (t *nullAuthenticator) Authenticate(req *http.Request) {}
+func (a *nullAuthenticator) Authenticate(req *http.Request) {}
 
-func (t *nullAuthenticator) Client() (*http.Client, error) {
+func (a *nullAuthenticator) Client() (*http.Client, error) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: t.InsecureSkipVerify,
+			InsecureSkipVerify: a.InsecureSkipVerify,
 		},
 	}
 
@@ -55,8 +60,12 @@ func (t *nullAuthenticator) Client() (*http.Client, error) {
 	return httpClient, nil
 }
 
-func (t *nullAuthenticator) Setup(con *Connection) error {
+func (a *nullAuthenticator) Setup(con *Connection) error {
 	return nil
+}
+
+func (a *nullAuthenticator) Verify(verify bool) {
+	a.InsecureSkipVerify = verify
 }
 
 // NullAuthenticator is an Authenticator which does no work - it implements the interface but
@@ -92,6 +101,10 @@ func (a *basicAuthenticator) Client() (*http.Client, error) {
 
 func (a *basicAuthenticator) Setup(con *Connection) error {
 	return nil
+}
+
+func (a *basicAuthenticator) Verify(verify bool) {
+	a.InsecureSkipVerify = verify
 }
 
 // BasicAuthenticator returns an implementation of the Authenticator interface which does HTTP basic
@@ -200,7 +213,13 @@ func (c *clientCertAuthenticator) Setup(con *Connection) error {
 	return nil
 }
 
-type cookieAuthenticator struct{}
+func (a *clientCertAuthenticator) Verify(verify bool) {
+	a.InsecureSkipVerify = verify
+}
+
+type cookieAuthenticator struct {
+	InsecureSkipVerify bool
+}
 
 // CookieAuthenticator returns an implementation of the Authenticator interface which supports
 // authentication
@@ -221,6 +240,10 @@ func (a *cookieAuthenticator) Client() (*http.Client, error) {
 
 func (a *cookieAuthenticator) Setup(con *Connection) error {
 	return nil
+}
+
+func (a *cookieAuthenticator) Verify(verify bool) {
+	a.InsecureSkipVerify = verify
 }
 
 type proxyAuthenticator struct {
@@ -278,4 +301,8 @@ func (a *proxyAuthenticator) Client() (*http.Client, error) {
 
 func (a *proxyAuthenticator) Setup(con *Connection) error {
 	return nil
+}
+
+func (a *proxyAuthenticator) Verify(verify bool) {
+	a.InsecureSkipVerify = verify
 }
