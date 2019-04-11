@@ -65,7 +65,7 @@ func (a *nullAuthenticator) Setup(con *Connection) error {
 }
 
 func (a *nullAuthenticator) Verify(verify bool) {
-	a.InsecureSkipVerify = verify
+	a.InsecureSkipVerify = !verify
 }
 
 // NullAuthenticator is an Authenticator which does no work - it implements the interface but
@@ -104,7 +104,7 @@ func (a *basicAuthenticator) Setup(con *Connection) error {
 }
 
 func (a *basicAuthenticator) Verify(verify bool) {
-	a.InsecureSkipVerify = verify
+	a.InsecureSkipVerify = !verify
 }
 
 // BasicAuthenticator returns an implementation of the Authenticator interface which does HTTP basic
@@ -214,7 +214,7 @@ func (c *clientCertAuthenticator) Setup(con *Connection) error {
 }
 
 func (a *clientCertAuthenticator) Verify(verify bool) {
-	a.InsecureSkipVerify = verify
+	a.InsecureSkipVerify = !verify
 }
 
 type cookieAuthenticator struct {
@@ -243,7 +243,7 @@ func (a *cookieAuthenticator) Setup(con *Connection) error {
 }
 
 func (a *cookieAuthenticator) Verify(verify bool) {
-	a.InsecureSkipVerify = verify
+	a.InsecureSkipVerify = !verify
 }
 
 type proxyAuthenticator struct {
@@ -304,5 +304,5 @@ func (a *proxyAuthenticator) Setup(con *Connection) error {
 }
 
 func (a *proxyAuthenticator) Verify(verify bool) {
-	a.InsecureSkipVerify = verify
+	a.InsecureSkipVerify = !verify
 }
