@@ -35,12 +35,24 @@ type Authenticator interface {
 	Setup(*Connection) error
 }
 
-type nullAuthenticator struct{}
+type nullAuthenticator struct {
+	InsecureSkipVerify bool
+}
 
 func (t *nullAuthenticator) Authenticate(req *http.Request) {}
 
 func (t *nullAuthenticator) Client() (*http.Client, error) {
-	return &http.Client{}, nil
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: t.InsecureSkipVerify,
+		},
+	}
+
+	httpClient := &http.Client{
+		Transport: tr,
+	}
+
+	return httpClient, nil
 }
 
 func (t *nullAuthenticator) Setup(con *Connection) error {
@@ -54,8 +66,9 @@ func NullAuthenticator() Authenticator {
 }
 
 type basicAuthenticator struct {
-	Username string
-	Password string
+	Username           string
+	Password           string
+	InsecureSkipVerify bool
 }
 
 func (a *basicAuthenticator) Authenticate(req *http.Request) {
@@ -64,7 +77,17 @@ func (a *basicAuthenticator) Authenticate(req *http.Request) {
 }
 
 func (a *basicAuthenticator) Client() (*http.Client, error) {
-	return &http.Client{}, nil
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: a.InsecureSkipVerify,
+		},
+	}
+
+	httpClient := &http.Client{
+		Transport: tr,
+	}
+
+	return httpClient, nil
 }
 
 func (a *basicAuthenticator) Setup(con *Connection) error {
@@ -82,10 +105,11 @@ func BasicAuthenticator(user, pass string) Authenticator {
 }
 
 type clientCertAuthenticator struct {
-	CertPath string
-	KeyPath  string
-	CaPath   string
-	Password string
+	CertPath           string
+	KeyPath            string
+	CaPath             string
+	Password           string
+	InsecureSkipVerify bool
 }
 
 // ClientCertAuthenticator provides an Authenticator which uses a client SSL certificate
@@ -147,7 +171,8 @@ func (c *clientCertAuthenticator) Client() (*http.Client, error) {
 	}
 
 	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
+		Certificates:       []tls.Certificate{cert},
+		InsecureSkipVerify: c.InsecureSkipVerify,
 	}
 
 	if c.CaPath != "" {
@@ -162,7 +187,9 @@ func (c *clientCertAuthenticator) Client() (*http.Client, error) {
 	}
 
 	tlsConfig.BuildNameToCertificate()
-	transport := &http.Transport{TLSClientConfig: tlsConfig}
+	transport := &http.Transport{
+		TLSClientConfig: tlsConfig,
+	}
 
 	return &http.Client{
 		Transport: transport,
@@ -197,9 +224,10 @@ func (a *cookieAuthenticator) Setup(con *Connection) error {
 }
 
 type proxyAuthenticator struct {
-	Username string
-	Roles    string
-	Token    string
+	Username           string
+	Roles              string
+	Token              string
+	InsecureSkipVerify bool
 }
 
 // ProxyAuthenticator returns an implementation of the Authenticator interface which supports
@@ -235,7 +263,17 @@ func (a *proxyAuthenticator) Authenticate(req *http.Request) {
 }
 
 func (a *proxyAuthenticator) Client() (*http.Client, error) {
-	return &http.Client{}, nil
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: a.InsecureSkipVerify,
+		},
+	}
+
+	httpClient := &http.Client{
+		Transport: tr,
+	}
+
+	return httpClient, nil
 }
 
 func (a *proxyAuthenticator) Setup(con *Connection) error {
