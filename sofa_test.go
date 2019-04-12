@@ -4,6 +4,8 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/h2non/gock"
 )
 
 var globalTestConnections *TestConnections
@@ -43,6 +45,10 @@ func (tc *TestConnections) Version1(t *testing.T, mock bool) *CouchDB1Connection
 		t.Fatalf("%v\n", err)
 	}
 
+	if mock {
+		gock.InterceptClient(con.http)
+	}
+
 	return &CouchDB1Connection{con}
 }
 
@@ -61,6 +67,10 @@ func (tc *TestConnections) Version2(t *testing.T, mock bool) *CouchDB2Connection
 	con, err := newConnection(host, 10*time.Second, NullAuthenticator())
 	if err != nil {
 		t.Fatalf("%v\n", err)
+	}
+
+	if mock {
+		gock.InterceptClient(con.http)
 	}
 
 	return &CouchDB2Connection{con}
