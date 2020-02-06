@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/h2non/gock"
+	"gopkg.in/h2non/gock.v1"
 )
 
 var globalTestConnections *TestConnections

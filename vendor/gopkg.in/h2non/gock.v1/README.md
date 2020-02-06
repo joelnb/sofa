@@ -1,9 +1,9 @@
 # gock [![Build Status](https://travis-ci.org/h2non/gock.svg?branch=master)](https://travis-ci.org/h2non/gock) [![GitHub release](https://img.shields.io/badge/version-v1.0-orange.svg?style=flat)](https://github.com/h2non/gock/releases) [![GoDoc](https://godoc.org/github.com/h2non/gock?status.svg)](https://godoc.org/github.com/h2non/gock) [![Coverage Status](https://coveralls.io/repos/github/h2non/gock/badge.svg?branch=master)](https://coveralls.io/github/h2non/gock?branch=master) [![Go Report Card](https://img.shields.io/badge/go_report-A+-brightgreen.svg)](https://goreportcard.com/report/github.com/h2non/gock) [![license](https://img.shields.io/badge/license-MIT-blue.svg)]()
 
-Versatile HTTP mocking made easy in [Go](https://golang.org).
+Versatile HTTP mocking made easy in [Go](https://golang.org) for `net/http` stdlib package.
 
 Heavily inspired by [nock](https://github.com/node-nock/nock).
-See also its Python port, [pook](https://github.com/h2non/pook).
+There is also its Python port, [pook](https://github.com/h2non/pook).
 
 To get started, take a look to the [examples](#examples).
 
@@ -85,7 +85,7 @@ disabling `gock` once you are done with your HTTP testing logic.
 A Go idiomatic approach for doing this can be using it in a `defer` statement, such as:
 
 ```go
-function TestGock (t *testing.T) {
+func TestGock (t *testing.T) {
 	defer gock.Off()
 
 	// ... my test code goes here
@@ -107,7 +107,7 @@ As a good testing pattern, you should call `gock.RestoreClient(client)` after ru
 You can also use a `defer` statement for doing it, as you do with `gock.Off()`, such as:
 
 ```go
-function TestGock (t *testing.T) {
+func TestGock (t *testing.T) {
 	defer gock.Off()
 	defer gock.RestoreClient(client)
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/h2non/gock"
+	"gopkg.in/h2non/gock.v1"
 	"github.com/nbio/st"
 )
 

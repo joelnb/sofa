@@ -1,6 +1,7 @@
 package gock
 
 import (
+	"encoding/base64"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -32,6 +33,9 @@ type Request struct {
 	// Persisted stores if the current mock should be always active.
 	Persisted bool
 
+	// Options stores options for current Request.
+	Options Options
+
 	// URLStruct stores the parsed URL as *url.URL struct.
 	URLStruct *url.URL
 
@@ -47,6 +51,9 @@ type Request struct {
 	// Cookies stores the Request HTTP cookies values to match.
 	Cookies []*http.Cookie
 
+	// PathParams stores the path parameters to match.
+	PathParams map[string]string
+
 	// BodyBuffer stores the body data to match.
 	BodyBuffer []byte
 
@@ -60,9 +67,10 @@ type Request struct {
 // NewRequest creates a new Request instance.
 func NewRequest() *Request {
 	return &Request{
-		Counter:   1,
-		URLStruct: &url.URL{},
-		Header:    make(http.Header),
+		Counter:    1,
+		URLStruct:  &url.URL{},
+		Header:     make(http.Header),
+		PathParams: make(map[string]string),
 	}
 }
 
@@ -178,6 +186,12 @@ func (r *Request) MatchType(kind string) *Request {
 	return r
 }
 
+// BasicAuth defines a username and password for HTTP Basic Authentication
+func (r *Request) BasicAuth(username, password string) *Request {
+	r.Header.Set("Authorization", "Basic "+basicAuth(username, password))
+	return r
+}
+
 // MatchHeader defines a new key and value header to match.
 func (r *Request) MatchHeader(key, value string) *Request {
 	r.Header.Set(key, value)
@@ -222,9 +236,27 @@ func (r *Request) ParamPresent(key string) *Request {
 	return r
 }
 
+// PathParam matches if a given path parameter key is present in the URL.
+//
+// The value is representative of the restful resource the key defines, e.g.
+//   // /users/123/name
+//   r.PathParam("users", "123")
+// would match.
+func (r *Request) PathParam(key, val string) *Request {
+	r.PathParams[key] = val
+
+	return r
+}
+
 // Persist defines the current HTTP mock as persistent and won't be removed after intercepting it.
 func (r *Request) Persist() *Request {
 	r.Persisted = true
+	return r
+}
+
+// WithOptions sets the options for the request.
+func (r *Request) WithOptions(options Options) *Request {
+	r.Options = options
 	return r
 }
 
@@ -280,4 +312,14 @@ func (r *Request) ReplyError(err error) *Response {
 func (r *Request) ReplyFunc(replier func(*Response)) *Response {
 	replier(r.Response)
 	return r.Response
+}
+
+// See 2 (end of page 4) https://www.ietf.org/rfc/rfc2617.txt
+// "To receive authorization, the client sends the userid and password,
+// separated by a single colon (":") character, within a base64
+// encoded string in the credentials."
+// It is not meant to be urlencoded.
+func basicAuth(username, password string) string {
+	auth := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
