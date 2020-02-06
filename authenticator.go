@@ -213,8 +213,8 @@ func (c *clientCertAuthenticator) Setup(con *Connection) error {
 	return nil
 }
 
-func (a *clientCertAuthenticator) Verify(verify bool) {
-	a.InsecureSkipVerify = !verify
+func (c *clientCertAuthenticator) Verify(verify bool) {
+	c.InsecureSkipVerify = !verify
 }
 
 type cookieAuthenticator struct {
