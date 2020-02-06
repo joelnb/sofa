@@ -70,6 +70,9 @@ type ChangesFeedParams struct {
 	View                   string           `url:"view,omitempty"`
 }
 
+// Values converts a ChangesFeedParams to a url.Values by performing pre-conversion
+// of any values which require special handling by conversion to JSON before being
+// passed to CouchDB.
 func (params ChangesFeedParams) Values() (url.Values, error) {
 	v, err := query.Values(params)
 	if err != nil {

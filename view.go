@@ -51,6 +51,8 @@ func (i InterfaceParameter) MarshalJSON() ([]byte, error) {
 	return json.Marshal(i.innerVal)
 }
 
+// EncodeValues implements the Encoder interface provided by github.com/google/go-querystring
+// to perform a custom marshal when converted to a query string.
 func (i InterfaceParameter) EncodeValues(key string, v *url.Values) error {
 	bytes, err := json.Marshal(i.innerVal)
 	if err != nil {
@@ -62,10 +64,15 @@ func (i InterfaceParameter) EncodeValues(key string, v *url.Values) error {
 	return nil
 }
 
+// InterfaceListParameter is a type used to pass a []interface{} to CouchDB with the
+// correct JSON representation.
 type InterfaceListParameter struct {
 	innerVal []*InterfaceParameter
 }
 
+// NewInterfaceListParameter generates an InterfaceListParameter from a []interface{}.
+// This is required before passing to CouchDB because it needs to be converted to JSON
+// in a custom way for CouchDB to understand it correctly.
 func NewInterfaceListParameter(ifaces []interface{}) *InterfaceListParameter {
 	iList := InterfaceListParameter{}
 	iList.innerVal = []*InterfaceParameter{}
@@ -156,6 +163,8 @@ type ViewParams struct {
 	UpdateSeq              BooleanParameter        `url:"update_seq,omitempty"`
 }
 
+// Values converts a ViewParams to a url.Values while handling any values
+// which need to be converted before being passed along to CouchDB.
 func (v ViewParams) Values() (url.Values, error) {
 	return query.Values(v)
 }
