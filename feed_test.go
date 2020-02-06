@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/h2non/gock.v1"
 	"github.com/nbio/st"
+	"gopkg.in/h2non/gock.v1"
 )
 
 func TestPollingFeed(t *testing.T) {

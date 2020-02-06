@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"gopkg.in/h2non/gock.v1"
 	"github.com/nbio/st"
+	"gopkg.in/h2non/gock.v1"
 )
 
 const TestViewFunc = `function(doc) {
