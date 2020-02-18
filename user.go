@@ -98,3 +98,18 @@ func (con *Connection) DeleteUser(user UserDocument) (string, error) {
 
 	return db.Delete(&user)
 }
+
+// UpdateUser modifies details of a user document.
+func (con *Connection) UpdateUser(user UserDocument) (string, error) {
+	db := con.Database("_users")
+
+	if user.DocumentMetadata.ID == "" {
+		return "", errors.New("cannot update a user with an unknown id")
+	}
+
+	if user.DocumentMetadata.Rev == "" {
+		return "", errors.New("cannot update a user with no current rev")
+	}
+
+	return db.Put(&user)
+}
