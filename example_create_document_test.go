@@ -53,7 +53,6 @@ func Example_createDocument() {
 	// Show the struct which was returned from the DB
 	fmt.Printf("Name: %s\n", getDoc.Name)
 	fmt.Printf("Type: %s\n", getDoc.Type)
-
 	// Output:
 	// Name: apple
 	// Type: fruit

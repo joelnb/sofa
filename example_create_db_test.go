@@ -31,7 +31,6 @@ func Example_createDatabase() {
 
 	fmt.Println(md.DocCount)
 	fmt.Println(md.DelCount)
-
 	// Output:
 	// example_db
 	// 0

@@ -26,7 +26,6 @@ func Example_deleteDatabase() {
 		panic(err)
 	}
 	fmt.Println(dbs)
-
 	// Output:
 	// []
 }
