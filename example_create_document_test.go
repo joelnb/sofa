@@ -14,7 +14,7 @@ type Fruit struct {
 }
 
 // ExampleCreateDocument creates a
-func Example_CreateDocument() {
+func Example_createDocument() {
 	conn, err := sofa.NewConnection("http://localhost:5984", 10*time.Second, sofa.NullAuthenticator())
 	if err != nil {
 		panic(err)

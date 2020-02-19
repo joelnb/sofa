@@ -8,7 +8,7 @@ import (
 	"github.com/joelnb/sofa"
 )
 
-func Example_CreateUser() {
+func Example_createUser() {
 	conn, err := sofa.NewConnection("http://localhost:5984", 10*time.Second, sofa.NullAuthenticator())
 	if err != nil {
 		panic(err)

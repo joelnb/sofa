@@ -8,7 +8,7 @@ import (
 )
 
 // ExampleDeleteDatabase
-func Example_DeleteDatabase() {
+func Example_deleteDatabase() {
 	// Make the connection with no authentication
 	conn, err := sofa.NewConnection("http://localhost:5984", 10*time.Second, sofa.NullAuthenticator())
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 )
 
 // ExampleCreateDatabase
-func Example_CreateDatabase() {
+func Example_createDatabase() {
 	// Make the connection with no authentication
 	conn, err := sofa.NewConnection("http://localhost:5984", 10*time.Second, sofa.NullAuthenticator())
 	if err != nil {
