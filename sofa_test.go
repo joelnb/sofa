@@ -19,9 +19,9 @@ type TestConnections struct {
 }
 
 const (
-	DefaultFirstRev = "1-801609c9fdb4c6d196820c5b1f3c26c9"
+	DefaultFirstRev  = "1-801609c9fdb4c6d196820c5b1f3c26c9"
 	DefaultSecondRev = "2-754abe0a29104a287f0493d8c3009524"
-	DefaultThirdRev = "3-0865d3627f7ded46b07d836cf102c5e8"
+	DefaultThirdRev  = "3-0865d3627f7ded46b07d836cf102c5e8"
 )
 
 func NewTestConnections() *TestConnections {

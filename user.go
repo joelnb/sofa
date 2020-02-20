@@ -81,7 +81,7 @@ func (con *Connection) CreateUser(user *UserDocument) (string, error) {
 		user.DocumentMetadata.ID = id
 	}
 
-		rev, err := db.Put(user)
+	rev, err := db.Put(user)
 	if err != nil {
 		return "", err
 	}
