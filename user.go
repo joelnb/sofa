@@ -71,7 +71,7 @@ func (con *Connection) UserByID(id string, rev string) (UserDocument, error) {
 }
 
 // CreateUser creates a new document in the _users database.
-func (con *Connection) CreateUser(user UserDocument) (string, error) {
+func (con *Connection) CreateUser(user *UserDocument) (string, error) {
 	db := con.Database("_users")
 
 	id := fmt.Sprintf("org.couchdb.user:%s", user.Name)
@@ -81,11 +81,18 @@ func (con *Connection) CreateUser(user UserDocument) (string, error) {
 		user.DocumentMetadata.ID = id
 	}
 
-	return db.Put(&user)
+		rev, err := db.Put(user)
+	if err != nil {
+		return "", err
+	}
+
+	user.DocumentMetadata.Rev = rev
+
+	return rev, err
 }
 
 // DeleteUser deletes an existing user from the _users database.
-func (con *Connection) DeleteUser(user UserDocument) (string, error) {
+func (con *Connection) DeleteUser(user *UserDocument) (string, error) {
 	db := con.Database("_users")
 
 	if user.DocumentMetadata.ID == "" {
@@ -96,11 +103,18 @@ func (con *Connection) DeleteUser(user UserDocument) (string, error) {
 		return "", errors.New("cannot delete a user with no current rev")
 	}
 
-	return db.Delete(&user)
+	rev, err := db.Delete(user)
+	if err != nil {
+		return "", err
+	}
+
+	user.DocumentMetadata.Rev = rev
+
+	return rev, err
 }
 
 // UpdateUser modifies details of a user document.
-func (con *Connection) UpdateUser(user UserDocument) (string, error) {
+func (con *Connection) UpdateUser(user *UserDocument) (string, error) {
 	db := con.Database("_users")
 
 	if user.DocumentMetadata.ID == "" {
@@ -111,5 +125,12 @@ func (con *Connection) UpdateUser(user UserDocument) (string, error) {
 		return "", errors.New("cannot update a user with no current rev")
 	}
 
-	return db.Put(&user)
+	rev, err := db.Put(user)
+	if err != nil {
+		return "", err
+	}
+
+	user.DocumentMetadata.Rev = rev
+
+	return rev, err
 }

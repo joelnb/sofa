@@ -15,13 +15,13 @@ func Example_createUser() {
 	}
 
 	user := sofa.UserDocument{
-		Name:     "nkev",
-		Password: "nkev",
-		Roles:    []string{},
+		Name:     "Couchy McCouchface",
+		Password: "example",
+		Roles:    []string{"boat"},
 		TheType:  "user",
 	}
 
-	rev, err := conn.CreateUser(user)
+	rev, err := conn.CreateUser(&user)
 	if err != nil {
 		panic(err)
 	}
@@ -30,7 +30,7 @@ func Example_createUser() {
 	fmt.Println(strings.Split(rev, "-")[0])
 
 	// Retrieve the document which was created
-	realUser, err := conn.User("nkev", rev)
+	realUser, err := conn.User("Couchy McCouchface", rev)
 	if err != nil {
 		panic(err)
 	}
@@ -42,7 +42,7 @@ func Example_createUser() {
 	realUser.Roles = []string{"issue_creator"}
 
 	// Save the modified user
-	updateRev, err := conn.UpdateUser(realUser)
+	updateRev, err := conn.UpdateUser(&realUser)
 	if err != nil {
 		panic(err)
 	}
@@ -51,7 +51,7 @@ func Example_createUser() {
 	realUser.DocumentMetadata.Rev = updateRev
 
 	// Delete the user
-	delrev, err := conn.DeleteUser(realUser)
+	delrev, err := conn.DeleteUser(&realUser)
 	if err != nil {
 		panic(err)
 	}
