@@ -16,7 +16,7 @@ Contributions of all sizes are welcomed. Simply make a pull request and I will b
 
 ### Running tests
 
-The basic tests can be run using a simple `go test`. To run a more complete set of tests which access a real database you will need a temporary CouchDB instance. The simplest way to create this is using docker:
+The basic tests can be run using a simple `go test '-run=^Test'` (this ensures that the examples are skipped because they require a CouchDB connection). To run a more complete set of tests which access a real database you will need a temporary CouchDB instance. The simplest way to create this is using docker:
 
     docker run -d --name couchdb -p 5984:5984 couchdb:1
 
