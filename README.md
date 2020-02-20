@@ -18,11 +18,11 @@ Contributions of all sizes are welcomed. Simply make a pull request and I will b
 
 The basic tests can be run using a simple `go test '-run=^Test'` (this ensures that the examples are skipped because they require a CouchDB connection). To run a more complete set of tests which access a real database you will need a temporary CouchDB instance. The simplest way to create this is using docker:
 
-    docker run -d --name couchdb -p 5984:5984 couchdb:1
+    docker run -d --name couchdb1 -p 5984:5984 couchdb:1
 
 To run all the tests you will also need a version 2 server:
 
-    docker run -d --name couchdb -p 5985:5984 couchdb:2
+    docker run -d --name couchdb2 -p 5985:5984 couchdb:2
 
 You can then set `SOFA_TEST_HOST_1` and `SOFA_TEST_HOST_2` to set the connection to each server:
 
