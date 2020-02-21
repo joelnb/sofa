@@ -26,10 +26,18 @@ type attachmentPutResponse struct {
 	OK  bool   `json:"ok"`
 }
 
-func (db *Database) GetAttachment(docid, name string) ([]byte, error) {
+// GetAttachment gets the current attachment and returns
+func (db *Database) GetAttachment(docid, name, rev string) ([]byte, error) {
 	path := urlConcat(db.DocumentPath(docid), name)
 
-	resp, err := db.con.Get(path, NewURLOptions())
+	opts := NewURLOptions()
+	if rev != "" {
+		if err := opts.Set("rev", rev); err != nil {
+			return nil, err
+		}
+	}
+
+	resp, err := db.con.Get(path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -37,10 +45,20 @@ func (db *Database) GetAttachment(docid, name string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func (db *Database) PutAttachment(docid, name string, doc io.Reader) (string, error) {
+// PutAttachment replaces the content of the attachment with new content read from an
+// io.Reader or creates it if it does not exist. If the provided rev is not the most
+// recent then an error will be returned from CouchDB.
+func (db *Database) PutAttachment(docid, name string, doc io.Reader, rev string) (string, error) {
 	path := urlConcat(db.DocumentPath(docid), name)
 
-	resp, err := db.con.Put(path, NewURLOptions(), doc)
+	opts := NewURLOptions()
+	if rev != "" {
+		if err := opts.Set("rev", rev); err != nil {
+			return "", err
+		}
+	}
+
+	resp, err := db.con.Put(path, opts, doc)
 	if err != nil {
 		return "", err
 	}
@@ -58,6 +76,7 @@ func (db *Database) PutAttachment(docid, name string, doc io.Reader) (string, er
 	return ar.Rev, nil
 }
 
+// DeleteAttachment removes an attachment from a document in CouchDB.
 func (db *Database) DeleteAttachment(docid, name, rev string) (string, error) {
 	path := urlConcat(db.DocumentPath(docid), name)
 
