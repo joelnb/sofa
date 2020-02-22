@@ -3,6 +3,8 @@ package sofa
 import (
 	"strings"
 	"testing"
+
+	"github.com/nbio/st"
 )
 
 var (
@@ -21,9 +23,7 @@ func TestAttachmentReal(t *testing.T) {
 
 	// Create a new database
 	db, err := con.CreateDatabase(AttachmentTestDB)
-	if err != nil {
-		t.Fatal(err)
-	}
+	st.Assert(t, err, nil)
 
 	doc := &struct {
 		DocumentMetadata
@@ -38,19 +38,13 @@ func TestAttachmentReal(t *testing.T) {
 	}
 
 	rev, err := db.Put(doc)
-	if err != nil {
-		t.Fatal(err)
-	}
+	st.Assert(t, err, nil)
 
 	attRev, err := db.PutAttachment(doc.DocumentMetadata.ID, AttachmentFileName, strings.NewReader(AttachmentContent), rev)
-	if err != nil {
-		t.Fatal(err)
-	}
+	st.Assert(t, err, nil)
 
 	attBytes, err := db.GetAttachment(doc.DocumentMetadata.ID, AttachmentFileName, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	st.Assert(t, err, nil)
 
 	attString := string(attBytes)
 
@@ -59,16 +53,13 @@ func TestAttachmentReal(t *testing.T) {
 	}
 
 	_, err = db.DeleteAttachment(doc.DocumentMetadata.ID, AttachmentFileName, attRev)
-	if err != nil {
-		t.Fatal(err)
-	}
+	st.Assert(t, err, nil)
 
 	_, err = db.GetAttachment(doc.DocumentMetadata.ID, AttachmentFileName, "")
 	if !ErrorStatus(err, 404) {
 		t.Fatalf("expected a 404 error getting attachment after deletion but got: %s", err)
 	}
 
-	if err := con.DeleteDatabase(AttachmentTestDB); err != nil {
-		t.Fatal(err)
-	}
+	err = con.DeleteDatabase(AttachmentTestDB)
+	st.Assert(t, err, nil)
 }
