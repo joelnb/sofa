@@ -43,6 +43,17 @@ func TestReplicatorSave(t *testing.T) {
 func TestReplicatorReal(t *testing.T) {
 	con := globalTestConnections.Version1(t, false)
 
+	// Run the cleanup as a best effort task - failures here do not case the test to fail
+	defer func() {
+		if err := con.DeleteDatabase(ReplicatorTestDB); err != nil {
+			t.Logf("error cleaning up source DB: %s", err)
+		}
+
+		if err := con.DeleteDatabase(ReplicatorTestTargetDB); err != nil {
+			t.Logf("error cleaning up target DB: %s", err)
+		}
+	}()
+
 	// Create a new database
 	_, err := con.CreateDatabase(ReplicatorTestDB)
 	if err != nil {
@@ -99,10 +110,15 @@ func TestReplicatorReal(t *testing.T) {
 		getRepl, err = con.Replication(ReplicatorTestName, "")
 		st.Assert(t, err, nil)
 
-		if getRepl.ReplicationState == "error" {
+		if getRepl.ReplicationState != "triggered" {
 			if getReplAttempts >= 3 {
 				fmt.Println(time.Now())
-				t.Fatalf("replication still in error after %d attempts: %s", getReplAttempts, getRepl.ReplicationStateReason)
+				t.Fatalf(
+					"replication still in state '%s' after %d attempts: %s",
+					getRepl.ReplicationState,
+					getReplAttempts,
+					getRepl.ReplicationStateReason,
+				)
 			}
 
 			time.Sleep(1 * time.Second)
@@ -115,11 +131,5 @@ func TestReplicatorReal(t *testing.T) {
 	}
 
 	_, err = con.DeleteReplication(&getRepl)
-	st.Assert(t, err, nil)
-
-	err = con.DeleteDatabase(ReplicatorTestDB)
-	st.Assert(t, err, nil)
-
-	err = con.DeleteDatabase(ReplicatorTestTargetDB)
 	st.Assert(t, err, nil)
 }
