@@ -3,9 +3,16 @@ package sofa
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/nbio/st"
 	"gopkg.in/h2non/gock.v1"
+)
+
+var (
+	ReplicatorTestDB       = "replicator_test"
+	ReplicatorTestTargetDB = "replicator_test_target"
+	ReplicatorTestName     = "my_repl"
 )
 
 func TestReplicatorSave(t *testing.T) {
@@ -23,11 +30,11 @@ func TestReplicatorSave(t *testing.T) {
 
 	con := globalTestConnections.Version1(t, true)
 
-	repl := con.NewReplication("_myrepl", "mydb", "yourdb")
+	repl := NewReplication("_myrepl", "mydb", "yourdb")
 	repl.CreateTarget = true
 	repl.Continuous = true
 
-	rev, err := con.Database("_replicator").Put(repl)
+	rev, err := con.PutReplication(&repl)
 	st.Assert(t, err, nil)
 
 	st.Assert(t, rev, "1-801609c9fdb4c6d196820c5b1f3c26c9")
@@ -36,28 +43,83 @@ func TestReplicatorSave(t *testing.T) {
 func TestReplicatorReal(t *testing.T) {
 	con := globalTestConnections.Version1(t, false)
 
-	getRepl, err := con.Replication("my_repl", "")
+	// Create a new database
+	_, err := con.CreateDatabase(ReplicatorTestDB)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	getRepl, err := con.Replication(ReplicatorTestName, "")
 	if err != nil {
 		if !ErrorStatus(err, 404) {
 			t.Fatal(err)
 		}
 	} else {
-		err := con.DeleteReplication(getRepl)
+		_, err := con.DeleteReplication(&getRepl)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	putRepl := con.NewReplication("my_repl", "test_db", "yourdb")
+	putRepl := NewReplication(ReplicatorTestName, ReplicatorTestDB, ReplicatorTestTargetDB)
 	putRepl.CreateTarget = true
 	putRepl.Continuous = true
+	putRepl.Owner = "admin"
+	putRepl.UserContext = map[string]interface{}{"roles": []string{"_admin"}}
 
-	_, err = con.Database("_replicator").Put(putRepl)
+	_, err = con.PutReplication(&putRepl)
 	st.Assert(t, err, nil)
 
-	putRepl, err = con.Replication("my_repl", "")
+	// This loop handles the case where CouchDB is slow to create the database after the replication
+	// is created. This seems to get slower after the first time the replication is created but the
+	// race condition is always present.
+	getDBAttempts := 1
+	for {
+		_, err = con.EnsureDatabase(ReplicatorTestTargetDB)
+		if err != nil {
+			if getDBAttempts >= 10 {
+				fmt.Println(time.Now())
+				t.Fatalf("couldn't get the created database after %d attempts: %s", getDBAttempts, err)
+			}
+
+			time.Sleep(1 * time.Second)
+			getDBAttempts++
+
+			continue
+		}
+
+		break
+	}
+
+	// This loop is to handle the case where we were able to retrieve the DB before CouchDB had updated
+	// the replicator document to account for this - in this case the replicator document can have the state
+	// set to error with the reason: "db_not_found: could not open replicator_test_target"
+	getReplAttempts := 1
+	for {
+		getRepl, err = con.Replication(ReplicatorTestName, "")
+		st.Assert(t, err, nil)
+
+		if getRepl.ReplicationState == "error" {
+			if getReplAttempts >= 3 {
+				fmt.Println(time.Now())
+				t.Fatalf("replication still in error after %d attempts: %s", getReplAttempts, getRepl.ReplicationStateReason)
+			}
+
+			time.Sleep(1 * time.Second)
+			getReplAttempts++
+
+			continue
+		}
+
+		break
+	}
+
+	_, err = con.DeleteReplication(&getRepl)
 	st.Assert(t, err, nil)
 
-	err = con.DeleteReplication(putRepl)
+	err = con.DeleteDatabase(ReplicatorTestDB)
+	st.Assert(t, err, nil)
+
+	err = con.DeleteDatabase(ReplicatorTestTargetDB)
 	st.Assert(t, err, nil)
 }
