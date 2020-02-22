@@ -14,6 +14,11 @@ var (
 func TestAttachmentReal(t *testing.T) {
 	con := globalTestConnections.Version2(t, false)
 
+	// Cleanup the DB if it existed already
+	if err := con.DeleteDatabase(AttachmentTestDB); err != nil && !ErrorStatus(err, 404) {
+		t.Fatal(err)
+	}
+
 	// Create a new database
 	db, err := con.CreateDatabase(AttachmentTestDB)
 	if err != nil {
