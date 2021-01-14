@@ -28,6 +28,12 @@ type Database struct {
 	con      *Connection
 }
 
+// Database3 represents a CouchDB version 3 database & provides methods to access documents in the database.
+// Most methods come from the embedded Database but some are modifed.
+type Database3 struct {
+	*Database
+}
+
 // Get retrieves a single document from the database and unmarshals it into the
 // provided interface.
 func (d *Database) Get(document Document, id, rev string) (string, error) {
@@ -217,10 +223,32 @@ func (d *Database) PollingChangesFeed(long bool) PollingChangesFeed {
 	}
 }
 
+// PollingChangesFeed gets a changes feed which will poll the server for changes to documents.
+func (d *Database3) PollingChangesFeed(long bool) PollingChangesFeed3 {
+	var t = "normal"
+	if long {
+		t = "longpoll"
+	}
+
+	return PollingChangesFeed3{
+		db:       d,
+		feedType: t,
+	}
+}
+
 // ContinuousChangesFeed gets a changes feed with a continuous connection to the database. New
 // changes are then pushed over the existing connection as they arrive.
 func (d *Database) ContinuousChangesFeed(params ChangesFeedParams) ContinuousChangesFeed {
 	return ContinuousChangesFeed{
+		db:     d,
+		params: params,
+	}
+}
+
+// ContinuousChangesFeed gets a changes feed with a continuous connection to the database. New
+// changes are then pushed over the existing connection as they arrive.
+func (d *Database3) ContinuousChangesFeed(params ChangesFeedParams) ContinuousChangesFeed3 {
+	return ContinuousChangesFeed3{
 		db:     d,
 		params: params,
 	}

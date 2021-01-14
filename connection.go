@@ -31,6 +31,11 @@ type CouchDB2Connection struct {
 	*Connection
 }
 
+// CouchDB3Connection is a connection specifically for a version 3 server.
+type CouchDB3Connection struct {
+	*CouchDB2Connection
+}
+
 func newConnection(serverURL string, timeout time.Duration, auth Authenticator) (*Connection, error) {
 	hasURLScheme, err := regexp.MatchString("^https?://.*", serverURL)
 	if err != nil {
@@ -91,6 +96,17 @@ func NewConnection2(serverURL string, timeout time.Duration, auth Authenticator)
 	return &CouchDB2Connection{con}, nil
 }
 
+// NewConnection3 creates a new CouchDB3Connection which can be used to interact with a single CouchDB server.
+// Any query parameters passed in the serverUrl are discarded before creating the connection.
+func NewConnection3(serverURL string, timeout time.Duration, auth Authenticator) (*CouchDB3Connection, error) {
+	con, err := NewConnection2(serverURL, timeout, auth)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CouchDB3Connection{con}, nil
+}
+
 // URL returns the URL of the server with a path appended.
 func (con *Connection) URL(path string) url.URL {
 	durl := *con.url
@@ -108,6 +124,15 @@ func (con *Connection) Database(name string) *Database {
 	}
 }
 
+// Database creates a new Database object. No validation or contact with the couchdb
+// server is performed in this method so it is possible to create Database objects for
+// databases which do not exist
+func (con *CouchDB3Connection) Database(name string) *Database3 {
+	return &Database3{
+		con.Connection.Database(name),
+	}
+}
+
 // EnsureDatabase creates a new Database object & then requests the metadata to ensure
 // that the Database actually exists on the server. The Database is returned with the
 // metadata already available.
@@ -115,6 +140,18 @@ func (con *Connection) EnsureDatabase(name string) (*Database, error) {
 	db := con.Database(name)
 	_, err := db.Metadata()
 	return db, err
+}
+
+// EnsureDatabase creates a new Database object & then requests the metadata to ensure
+// that the Database actually exists on the server. The Database is returned with the
+// metadata already available.
+func (con *CouchDB3Connection) EnsureDatabase(name string) (*Database3, error) {
+	db, err := con.Connection.EnsureDatabase(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Database3{db}, nil
 }
 
 // Request performs a request and returns the http.Response which results from that request.
@@ -281,6 +318,38 @@ func (con *Connection) Databases() (databases []*Database, err error) {
 // CreateDatabase creates a new database on the CouchDB server and returns a
 // pointer to a Database initialised with the new values.
 func (con *Connection) CreateDatabase(name string) (*Database, error) {
+	resp, err := con.Put(name, NewURLOptions(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := map[string]interface{}{}
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		return nil, err
+	}
+
+	return con.Database(name), nil
+}
+
+// Databases returns a Database object for every database on the server,
+// excluding CouchDB internal databases as there are special methods for
+// accessing them.
+func (con *CouchDB3Connection) Databases() (databases []*Database3, err error) {
+	dbnames, err := con.ListDatabases()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, dbname := range dbnames {
+		databases = append(databases, con.Database(dbname))
+	}
+
+	return databases, nil
+}
+
+// CreateDatabase creates a new database on the CouchDB server and returns a
+// pointer to a Database initialised with the new values.
+func (con *CouchDB3Connection) CreateDatabase(name string) (*Database3, error) {
 	resp, err := con.Put(name, NewURLOptions(), nil)
 	if err != nil {
 		return nil, err
