@@ -24,8 +24,12 @@ To run all the tests you will also need a version 2 server:
 
     docker run -d --name couchdb2 -p 5985:5984 couchdb:2
 
+...and a version 3 server with specific insecure credentials:
+
+    docker run -d --name couchdb3 -p 5986:5984 -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=adm1nP4rty couchdb:3
+
 You can then set `SOFA_TEST_HOST_1` and `SOFA_TEST_HOST_2` to set the connection to each server:
 
-    SOFA_TEST_HOST_1=http://127.0.0.1:5984 SOFA_TEST_HOST_2=http://127.0.0.1:5985 go test -v
+    SOFA_TEST_HOST_1=http://127.0.0.1:5984 SOFA_TEST_HOST_2=http://127.0.0.1:5985 SOFA_TEST_HOST_3=http://127.0.0.1:5986 go test -v
 
 If you have chosen to only start a single version then only include the appropriate environment variable to ensure tests for the other version are not run.
