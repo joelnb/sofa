@@ -2,6 +2,7 @@ package sofa
 
 import (
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,9 +14,11 @@ var globalTestConnections *TestConnections
 type TestConnections struct {
 	Version1Host string
 	Version2Host string
+	Version3Host string
 
 	Version1MockHost string
 	Version2MockHost string
+	Version3MockHost string
 }
 
 const (
@@ -28,9 +31,18 @@ func NewTestConnections() *TestConnections {
 	return &TestConnections{
 		Version1Host: os.Getenv("SOFA_TEST_HOST_1"),
 		Version2Host: os.Getenv("SOFA_TEST_HOST_2"),
+		Version3Host: os.Getenv("SOFA_TEST_HOST_3"),
 
 		Version1MockHost: "couchdb1.local",
 		Version2MockHost: "couchdb2.local",
+		Version3MockHost: "couchdb3.local",
+	}
+}
+
+func assertPrefix(t *testing.T, have, wantPrefix string) {
+	if !strings.HasPrefix(have, wantPrefix) {
+		t.Fail()
+		t.Logf("Wanted a string starting with '%s', got: %s", wantPrefix, have)
 	}
 }
 
@@ -80,6 +92,30 @@ func (tc *TestConnections) Version2(t *testing.T, mock bool) *CouchDB2Connection
 	}
 
 	return &CouchDB2Connection{con}
+}
+
+func (tc *TestConnections) Version3(t *testing.T, mock bool) *CouchDB3Connection {
+	host := ""
+	if mock {
+		host = tc.Version3MockHost
+	} else {
+		host = tc.Version3Host
+		if host == "" {
+			t.Skip("skipping - $SOFA_TEST_HOST_3 not set")
+			return nil
+		}
+	}
+
+	con, err := newConnection(host, 10*time.Second, BasicAuthenticator("admin", "Pa55word"))
+	if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+
+	if mock {
+		gock.InterceptClient(con.http)
+	}
+
+	return &CouchDB3Connection{&CouchDB2Connection{con}}
 }
 
 func TestMain(m *testing.M) {

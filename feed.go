@@ -39,6 +39,13 @@ type ChangesFeedUpdate struct {
 	Results []ChangesFeedChange `json:"results"`
 }
 
+// ChangesFeedUpdate is a single update from a changes feed.
+type ChangesFeedUpdate3 struct {
+	LastSeq string               `json:"last_seq"`
+	Pending int64                `json:"pending"`
+	Results []ChangesFeedChange3 `json:"results"`
+}
+
 // ChangesFeedChange is a single change to a document in the database. One of
 // more of these will be included in updates where any changes were actually made.
 type ChangesFeedChange struct {
@@ -48,6 +55,18 @@ type ChangesFeedChange struct {
 	Deleted bool   `json:"deleted"`
 	ID      string `json:"id"`
 	Seq     int64  `json:"seq"`
+}
+
+// ChangesFeedChange3 is a single change to a document in the database. It is almost
+// identical to ChangesFeedChange but with attributes modified for the new CouchDB 3
+// format.
+type ChangesFeedChange3 struct {
+	Changes []struct {
+		Rev string `json:"rev"`
+	} `json:"changes"`
+	Deleted bool   `json:"deleted"`
+	ID      string `json:"id"`
+	Seq     string `json:"seq"`
 }
 
 // ChangesFeedParams includes all parameters which can be provided to
@@ -64,7 +83,7 @@ type ChangesFeedParams struct {
 	AttachmentEncodingInfo BooleanParameter `url:"att_encoding_info,omitempty"`
 	LastEventID            int64            `url:"last-event-id,omitempty"`
 	Limit                  int64            `url:"limit,omitempty"`
-	Since                  int64            `url:"since,omitempty"`
+	Since                  interface{}      `url:"since,omitempty"`
 	Style                  string           `url:"style,omitempty"`
 	Timeout                int64            `url:"timeout,omitempty"`
 	View                   string           `url:"view,omitempty"`
@@ -113,6 +132,28 @@ func (f PollingChangesFeed) Next(params ChangesFeedParams) (ChangesFeedUpdate, e
 	return u, err
 }
 
+// PollingChangesFeed3 can be used for either type of changes feed which polls
+// the database for information ("normal" and "longpoll").
+type PollingChangesFeed3 struct {
+	db       *Database3
+	feedType string
+}
+
+// Next polls for the next update from the database. This may block until a timeout is
+// reached if there are no updates available.
+func (f PollingChangesFeed3) Next(params ChangesFeedParams) (ChangesFeedUpdate3, error) {
+	params.Feed = f.feedType
+
+	v, err := params.Values()
+	if err != nil {
+		return ChangesFeedUpdate3{}, err
+	}
+
+	var u ChangesFeedUpdate3
+	_, err = f.db.con.unmarshalRequest("GET", f.db.ViewPath("_changes"), v, nil, &u)
+	return u, err
+}
+
 // ContinuousChangesFeed maintains a connection to the database and receives continuous
 // updates as they arrive.
 type ContinuousChangesFeed struct {
@@ -157,6 +198,55 @@ func (f *ContinuousChangesFeed) Next() (ChangesFeedChange, error) {
 	var u ChangesFeedChange
 	if err := json.Unmarshal(f.scanner.Bytes(), &u); err != nil {
 		return ChangesFeedChange{}, err
+	}
+
+	return u, nil
+}
+
+// ContinuousChangesFeed3 maintains a connection to the database and receives continuous
+// updates as they arrive.
+type ContinuousChangesFeed3 struct {
+	db     *Database3
+	params ChangesFeedParams
+
+	resp    *http.Response
+	scanner *bufio.Scanner
+}
+
+// Next gets the next available item from the changes feed. This will block until an item
+// becomes available.
+func (f *ContinuousChangesFeed3) Next() (ChangesFeedChange3, error) {
+	if f.resp == nil {
+		f.params.Feed = string(FeedContinuous)
+
+		v, err := f.params.Values()
+		if err != nil {
+			return ChangesFeedChange3{}, err
+		}
+
+		resp, err := f.db.con.urlRequest("GET", f.db.con.URL(f.db.ViewPath("_changes")), v, nil, false)
+		if err != nil {
+			return ChangesFeedChange3{}, err
+		}
+
+		f.resp = resp
+		f.scanner = bufio.NewScanner(f.resp.Body)
+	}
+
+	if !f.scanner.Scan() {
+		return ChangesFeedChange3{}, f.scanner.Err()
+	}
+
+	// Swallow an extra newline if needed
+	if len(f.scanner.Bytes()) == 0 {
+		if !f.scanner.Scan() {
+			return ChangesFeedChange3{}, f.scanner.Err()
+		}
+	}
+
+	var u ChangesFeedChange3
+	if err := json.Unmarshal(f.scanner.Bytes(), &u); err != nil {
+		return ChangesFeedChange3{}, err
 	}
 
 	return u, nil
