@@ -72,12 +72,12 @@ func TestDatabaseList(t *testing.T) {
 	defer gock.Off()
 
 	expectedRows := []Row{
-		Row{
+		{
 			ID:    "newdoc",
 			Key:   "newdoc",
 			Value: map[string]interface{}{"rev": "1-87ae7d46fb1561c570cc5d7ce5c80c1e"},
 		},
-		Row{
+		{
 			ID:    "olddoc",
 			Key:   "olddoc",
 			Value: map[string]interface{}{"rev": "1-40bf1b639fdb5a345dcf519399a431f0"},
@@ -91,12 +91,12 @@ func TestDatabaseList(t *testing.T) {
 			"total_rows": 2,
 			"offset":     0,
 			"rows": []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"id":    "newdoc",
 					"key":   "newdoc",
 					"value": map[string]string{"rev": "1-87ae7d46fb1561c570cc5d7ce5c80c1e"},
 				},
-				map[string]interface{}{
+				{
 					"id":    "olddoc",
 					"key":   "olddoc",
 					"value": map[string]string{"rev": "1-40bf1b639fdb5a345dcf519399a431f0"},

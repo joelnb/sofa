@@ -19,13 +19,13 @@ func TestDocumentList(t *testing.T) {
 			"total_rows": 3,
 			"offset":     0,
 			"rows": []map[string]interface{}{
-				map[string]interface{}{"id": "joel", "key": "joel", "value": map[string]string{
+				{"id": "joel", "key": "joel", "value": map[string]string{
 					"rev": "1-f75c2efff6baeed9e202d0cf58b8bd60",
 				}},
-				map[string]interface{}{"id": "bob", "key": "bob", "value": map[string]string{
+				{"id": "bob", "key": "bob", "value": map[string]string{
 					"rev": "1-2de76086df68b0d3840f20dff114a000",
 				}},
-				map[string]interface{}{"id": "jane", "key": "jane", "value": map[string]string{
+				{"id": "jane", "key": "jane", "value": map[string]string{
 					"rev": "10-6bf653103ec443a04119fde156189078",
 				}},
 			},

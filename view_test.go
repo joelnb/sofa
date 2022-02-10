@@ -26,12 +26,12 @@ func TestTemporaryView(t *testing.T) {
 			"total_rows": 2,
 			"offset":     0,
 			"rows": []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"id":    "fruit1",
 					"key":   "fruit",
 					"value": "apple",
 				},
-				map[string]interface{}{
+				{
 					"id":    "fruit2",
 					"key":   "fruit",
 					"value": "apple",
@@ -61,12 +61,12 @@ func TestNamedView(t *testing.T) {
 			"total_rows": 2,
 			"offset":     0,
 			"rows": []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"id":    "fruit1",
 					"key":   "fruit",
 					"value": "apple",
 				},
-				map[string]interface{}{
+				{
 					"id":    "fruit2",
 					"key":   "fruit",
 					"value": "apple",
