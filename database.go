@@ -4,21 +4,22 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/url"
+	"strconv"
 )
 
 // DatabaseMetadata contains information about the database in CouchDB.
 type DatabaseMetadata struct {
-	CompactRunning     bool   `json:"compact_running"`
-	Name               string `json:"db_name"`
-	DocCount           int    `json:"doc_count"`
-	DelCount           int    `json:"doc_del_count"`
-	InstanceStartTime  string `json:"instance_start_time"`
-	DataSize           int    `json:"data_size"`
-	DiskSize           int    `json:"disk_size"`
-	DiskFormatVersion  int    `json:"disk_format_version"`
-	PurgeSeq           int    `json:"purge_seq"`
-	UpdateSeq          int    `json:"update_seq"`
-	CommittedUpdateSeq int    `json:"committed_update_seq"`
+	CompactRunning     bool         `json:"compact_running"`
+	Name               string       `json:"db_name"`
+	DocCount           int          `json:"doc_count"`
+	DelCount           int          `json:"doc_del_count"`
+	InstanceStartTime  string       `json:"instance_start_time"`
+	DataSize           int          `json:"data_size"`
+	DiskSize           int          `json:"disk_size"`
+	DiskFormatVersion  int          `json:"disk_format_version"`
+	PurgeSeq           AlwaysString `json:"purge_seq"`
+	UpdateSeq          AlwaysString `json:"update_seq"`
+	CommittedUpdateSeq AlwaysString `json:"committed_update_seq"`
 }
 
 // Database represents a CouchDB database & provides methods to access documents in the database.

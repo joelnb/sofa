@@ -4,6 +4,28 @@ import (
 	"net/http"
 )
 
+// AlwaysString allows fields which can be either an int or string (depending on the
+// version) to always be unmarshaled as a string.
+type AlwaysString string
+
+// UnmarshalJSON implements the json.Unmarshaler interface, returning directly as a
+// string if one is found or converting an int if that is found. Other types are not
+// supported and the error from json.Unmarshal will be returned.
+func (fs *AlwaysString) UnmarshalJSON(b []byte) error {
+	if b[0] == '"' {
+		return json.Unmarshal(b, (*string)(fs))
+	}
+
+	var i int
+	if err := json.Unmarshal(b, &i); err != nil {
+		return err
+	}
+
+	*fs = AlwaysString(strconv.Itoa(i))
+
+	return nil
+}
+
 // ServerDetails1 represents the details returned from a CouchDB version 1 server when
 // requesting the root page.
 type ServerDetails1 struct {

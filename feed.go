@@ -34,7 +34,7 @@ type ChangesFeed interface {
 
 // ChangesFeedUpdate is a single update from a changes feed.
 type ChangesFeedUpdate struct {
-	LastSeq int64               `json:"last_seq"`
+	LastSeq AlwaysString        `json:"last_seq"`
 	Pending int64               `json:"pending"`
 	Results []ChangesFeedChange `json:"results"`
 }
@@ -45,9 +45,9 @@ type ChangesFeedChange struct {
 	Changes []struct {
 		Rev string `json:"rev"`
 	} `json:"changes"`
-	Deleted bool   `json:"deleted"`
-	ID      string `json:"id"`
-	Seq     int64  `json:"seq"`
+	Deleted bool         `json:"deleted"`
+	ID      string       `json:"id"`
+	Seq     AlwaysString `json:"seq"`
 }
 
 // ChangesFeedParams includes all parameters which can be provided to
