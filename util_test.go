@@ -72,7 +72,7 @@ func TestFauxtonURL(t *testing.T) {
 	baseURL := conn.URL("/")
 
 	uA := conn.FauxtonURL("/database_name")
-	resA := urlConcat(baseURL.String(), "_utils/#database/database_name")
+	resA := urlConcat(baseURL.String(), "_utils/#database/database_name/_all_docs")
 	st.Expect(t, resA, uA.String())
 
 	uB := conn.FauxtonURL("/database_name/document_name")

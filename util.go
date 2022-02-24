@@ -48,6 +48,8 @@ func (con *CouchDB2Connection) FauxtonURL(path string) url.URL {
 
 	if len(patharr) == 0 {
 		return furl
+	} else if len(patharr) == 1 {
+		path = path + "/_all_docs"
 	}
 
 	furl.Fragment = urlConcat("database", path)
