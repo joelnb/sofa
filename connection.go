@@ -155,11 +155,8 @@ func (con *Connection) urlRequest(method string, durl url.URL, opts Options, bod
 		c <- err
 	}()
 
-	select {
-	case err := <-c:
-		if err != nil {
-			return nil, err
-		}
+	if err := <-c; err != nil {
+		return nil, err
 	}
 
 	if resp.StatusCode >= 400 {
