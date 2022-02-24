@@ -80,8 +80,5 @@ type Row struct {
 
 // HasDocument checks the current Row for the presence of the Document attached to it.
 func (r Row) HasDocument() bool {
-	if r.Document == nil {
-		return false
-	}
-	return true
+	return r.Document != nil
 }
