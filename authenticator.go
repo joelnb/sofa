@@ -166,6 +166,7 @@ func (c *clientCertAuthenticator) Client() (*http.Client, error) {
 			return nil, errors.New("expecting a PEM block in encrypted private key file")
 		}
 
+		//nolint // DecryptPEMBlock may be insecure (as the warning says) but use can be required to integrate with existing systems
 		decBytes, decErr := x509.DecryptPEMBlock(pemBlock, []byte(c.Password))
 		if decErr != nil {
 			return nil, decErr
