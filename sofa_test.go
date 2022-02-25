@@ -1,6 +1,7 @@
 package sofa
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -34,19 +35,22 @@ func NewTestConnections() *TestConnections {
 	}
 }
 
-func (tc *TestConnections) Version1(t *testing.T, mock bool) *CouchDB1Connection {
-	host := ""
+func (tc *TestConnections) hostOrSkip(t *testing.T, mock bool, version int, mockHost, realHost string) string {
 	if mock {
-		host = tc.Version1MockHost
-	} else {
-		host = tc.Version1Host
-		if host == "" {
-			t.Skip("skipping - $SOFA_TEST_HOST_1 not set")
-			return nil
-		}
+		return mockHost
 	}
 
-	con, err := newConnection(host, 10*time.Second, NullAuthenticator())
+	if realHost == "" {
+		t.Skip(fmt.Sprintf("skipping - $SOFA_TEST_HOST_%d not set", version))
+	}
+
+	return realHost
+}
+
+func (tc *TestConnections) testInnerConnection(t *testing.T, mock bool, version int, mockHost, realHost string, auth Authenticator) *Connection {
+	host := tc.hostOrSkip(t, mock, version, mockHost, realHost)
+
+	con, err := newConnection(host, 10*time.Second, auth)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -54,30 +58,18 @@ func (tc *TestConnections) Version1(t *testing.T, mock bool) *CouchDB1Connection
 	if mock {
 		gock.InterceptClient(con.http)
 	}
+
+	return con
+}
+
+func (tc *TestConnections) Version1(t *testing.T, mock bool) *CouchDB1Connection {
+	con := tc.testInnerConnection(t, mock, 1, tc.Version1MockHost, tc.Version1Host, NullAuthenticator())
 
 	return &CouchDB1Connection{con}
 }
 
 func (tc *TestConnections) Version2(t *testing.T, mock bool) *CouchDB2Connection {
-	host := ""
-	if mock {
-		host = tc.Version2MockHost
-	} else {
-		host = tc.Version2Host
-		if host == "" {
-			t.Skip("skipping - $SOFA_TEST_HOST_2 not set")
-			return nil
-		}
-	}
-
-	con, err := newConnection(host, 10*time.Second, NullAuthenticator())
-	if err != nil {
-		t.Fatalf("%v\n", err)
-	}
-
-	if mock {
-		gock.InterceptClient(con.http)
-	}
+	con := tc.testInnerConnection(t, mock, 2, tc.Version2MockHost, tc.Version2Host, NullAuthenticator())
 
 	return &CouchDB2Connection{con}
 }
