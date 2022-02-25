@@ -45,3 +45,23 @@ func TestConnectionStatRealVersion2(t *testing.T) {
 	st.Refute(t, stats.CouchDB.HTTPD, nil)
 	st.Refute(t, stats.CouchDB.HTTPD.Requests, nil)
 }
+
+func TestConnectionAllStatsRealVersion3(t *testing.T) {
+	con := globalTestConnections.Version3(t, false)
+
+	stats, err := con.AllStatistics()
+	st.Assert(t, err, nil)
+
+	st.Refute(t, stats.CouchDB.HTTPD, nil)
+	st.Refute(t, stats.CouchDB.HTTPD.Requests, nil)
+}
+
+func TestConnectionStatRealVersion3(t *testing.T) {
+	con := globalTestConnections.Version3(t, false)
+
+	stats, err := con.Statistic("couchdb", "httpd/requests")
+	st.Assert(t, err, nil)
+
+	st.Refute(t, stats.CouchDB.HTTPD, nil)
+	st.Refute(t, stats.CouchDB.HTTPD.Requests, nil)
+}
