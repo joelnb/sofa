@@ -31,7 +31,7 @@ func TestPollingFeed(t *testing.T) {
 		Post("/test_db/_changes")
 }
 
-func TestFeedPollingReal(t *testing.T) {
+func TestFeedPollingReal1(t *testing.T) {
 	con := globalTestConnections.Version1(t, false)
 
 	defer func() {
@@ -101,7 +101,7 @@ func TestFeedPollingReal(t *testing.T) {
 	}
 }
 
-func TestFeedContinuousReal(t *testing.T) {
+func TestFeedContinuousReal1(t *testing.T) {
 	con := globalTestConnections.Version1(t, false)
 
 	// Delete the DB if it currently exists
@@ -157,7 +157,7 @@ func TestFeedContinuousReal(t *testing.T) {
 	st.Assert(t, updateAsync.Seq, AlwaysString("3"))
 }
 
-func TestFeedPolling2Real(t *testing.T) {
+func TestFeedPollingReal2(t *testing.T) {
 	con := globalTestConnections.Version2(t, false)
 
 	defer func() {
@@ -224,7 +224,7 @@ func TestFeedPolling2Real(t *testing.T) {
 	}
 }
 
-func TestFeedContinuous2Real(t *testing.T) {
+func TestFeedContinuousReal2(t *testing.T) {
 	con := globalTestConnections.Version2(t, false)
 
 	// Delete the DB if it currently exists
@@ -280,7 +280,7 @@ func TestFeedContinuous2Real(t *testing.T) {
 	assertPrefix(t, string(updateAsync.Seq), "3-")
 }
 
-func TestFeedPolling3Real(t *testing.T) {
+func TestFeedPollingReal3(t *testing.T) {
 	con := globalTestConnections.Version3(t, false)
 
 	defer func() {
@@ -347,7 +347,7 @@ func TestFeedPolling3Real(t *testing.T) {
 	}
 }
 
-func TestFeedContinuous3Real(t *testing.T) {
+func TestFeedContinuousReal3(t *testing.T) {
 	con := globalTestConnections.Version3(t, false)
 
 	// Delete the DB if it currently exists
