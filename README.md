@@ -30,7 +30,7 @@ To run all the tests you will also need a version 2 server:
 
 There is a simple script provided which can be used to start all three versions:
 
-    .scripts/test_docker_containers.sh
+    ./.scripts/start_test_docker_containers.sh
 
 You can then set `SOFA_TEST_HOST_1`, `SOFA_TEST_HOST_2` and `SOFA_TEST_HOST_3` to set the connection to each server:
 
