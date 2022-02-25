@@ -21,21 +21,6 @@ type Connection struct {
 	timeout time.Duration
 }
 
-// CouchDB1Connection is a connection specifically for a version 1 server.
-type CouchDB1Connection struct {
-	*Connection
-}
-
-// CouchDB2Connection is a connection specifically for a version 2 server.
-type CouchDB2Connection struct {
-	*Connection
-}
-
-// CouchDB3Connection is a connection specifically for a version 3 server.
-type CouchDB3Connection struct {
-	*CouchDB2Connection
-}
-
 func newConnection(serverURL string, timeout time.Duration, auth Authenticator) (*Connection, error) {
 	hasURLScheme, err := regexp.MatchString("^https?://.*", serverURL)
 	if err != nil {
@@ -74,63 +59,11 @@ func newConnection(serverURL string, timeout time.Duration, auth Authenticator) 
 	return con, nil
 }
 
-// NewConnection creates a new CouchDB1Connection which can be used to interact with a single CouchDB server.
-// Any query parameters passed in the serverUrl are discarded before creating the connection.
-func NewConnection(serverURL string, timeout time.Duration, auth Authenticator) (*CouchDB1Connection, error) {
-	con, err := newConnection(serverURL, timeout, auth)
-	if err != nil {
-		return nil, err
-	}
-
-	return &CouchDB1Connection{con}, nil
-}
-
-// NewConnection2 creates a new CouchDB2Connection which can be used to interact with a single CouchDB server.
-// Any query parameters passed in the serverUrl are discarded before creating the connection.
-func NewConnection2(serverURL string, timeout time.Duration, auth Authenticator) (*CouchDB2Connection, error) {
-	con, err := newConnection(serverURL, timeout, auth)
-	if err != nil {
-		return nil, err
-	}
-
-	return &CouchDB2Connection{con}, nil
-}
-
-// NewConnection3 creates a new CouchDB3Connection which can be used to interact with a single CouchDB server.
-// Any query parameters passed in the serverUrl are discarded before creating the connection.
-func NewConnection3(serverURL string, timeout time.Duration, auth Authenticator) (*CouchDB3Connection, error) {
-	con, err := NewConnection2(serverURL, timeout, auth)
-	if err != nil {
-		return nil, err
-	}
-
-	return &CouchDB3Connection{con}, nil
-}
-
 // URL returns the URL of the server with a path appended.
 func (con *Connection) URL(path string) url.URL {
 	durl := *con.url
 	durl.Path = urlConcat(durl.Path, path)
 	return durl
-}
-
-// Database creates a new Database object. No validation or contact with the couchdb
-// server is performed in this method so it is possible to create Database objects for
-// databases which do not exist
-func (con *Connection) Database(name string) *Database {
-	return &Database{
-		name: name,
-		con:  con,
-	}
-}
-
-// EnsureDatabase creates a new Database object & then requests the metadata to ensure
-// that the Database actually exists on the server. The Database is returned with the
-// metadata already available.
-func (con *Connection) EnsureDatabase(name string) (*Database, error) {
-	db := con.Database(name)
-	_, err := db.Metadata()
-	return db, err
 }
 
 // Request performs a request and returns the http.Response which results from that request.
@@ -197,6 +130,11 @@ func (con *Connection) unmarshalRequest(method, path string, opts Options, body 
 	return resp, nil
 }
 
+// Delete sends a DELETE request to the provided path on the CouchDB server.
+func (con *Connection) Delete(path string, opts Options) (resp *http.Response, err error) {
+	return con.Request("DELETE", path, opts, nil)
+}
+
 // Get sends a GET request to the provided path on the CouchDB server.
 func (con *Connection) Get(path string, opts Options) (resp *http.Response, err error) {
 	return con.Request("GET", path, opts, nil)
@@ -205,12 +143,6 @@ func (con *Connection) Get(path string, opts Options) (resp *http.Response, err 
 // Head sends a HEAD request to the provided path on the CouchDB server.
 func (con *Connection) Head(path string, opts Options) (resp *http.Response, err error) {
 	return con.Request("HEAD", path, opts, nil)
-}
-
-// Put sends a PUT request to the provided path on the CouchDB server. The contents of the provided
-// io.Reader is sent as the body of the request.
-func (con *Connection) Put(path string, opts Options, body io.Reader) (resp *http.Response, err error) {
-	return con.Request("PUT", path, opts, body)
 }
 
 // Patch sends a PATCH request to the provided path on the CouchDB server. The contents of the provided
@@ -225,9 +157,10 @@ func (con *Connection) Post(path string, opts Options, body io.Reader) (resp *ht
 	return con.Request("POST", path, opts, body)
 }
 
-// Delete sends a DELETE request to the provided path on the CouchDB server.
-func (con *Connection) Delete(path string, opts Options) (resp *http.Response, err error) {
-	return con.Request("DELETE", path, opts, nil)
+// Put sends a PUT request to the provided path on the CouchDB server. The contents of the provided
+// io.Reader is sent as the body of the request.
+func (con *Connection) Put(path string, opts Options, body io.Reader) (resp *http.Response, err error) {
+	return con.Request("PUT", path, opts, body)
 }
 
 // Ping tests basic connection to CouchDB by making a HEAD request for one of the databases
@@ -236,20 +169,23 @@ func (con *Connection) Ping() error {
 	return err
 }
 
-// ServerInfo gets the information about this CouchDB instance returned when accessing the root
-// page
-func (con *CouchDB1Connection) ServerInfo() (ServerDetails1, error) {
-	d := ServerDetails1{}
-	_, err := con.unmarshalRequest("GET", "/", NewURLOptions(), nil, &d)
-	return d, err
+// Database creates a new Database object. No validation or contact with the couchdb
+// server is performed in this method so it is possible to create Database objects for
+// databases which do not exist
+func (con *Connection) Database(name string) *Database {
+	return &Database{
+		name: name,
+		con:  con,
+	}
 }
 
-// ServerInfo gets the information about this CouchDB instance returned when accessing the root
-// page
-func (con *CouchDB2Connection) ServerInfo() (ServerDetails2, error) {
-	d := ServerDetails2{}
-	_, err := con.unmarshalRequest("GET", "/", NewURLOptions(), nil, &d)
-	return d, err
+// EnsureDatabase creates a new Database object & then requests the metadata to ensure
+// that the Database actually exists on the server. The Database is returned with the
+// metadata already available.
+func (con *Connection) EnsureDatabase(name string) (*Database, error) {
+	db := con.Database(name)
+	_, err := db.Metadata()
+	return db, err
 }
 
 // ListDatabases returns the list of all database names on the server. Internal
