@@ -17,6 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Install required apt packages
+        run: sudo apt-get update && sudo apt-get install openssl
+        shell: bash
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
@@ -39,6 +42,9 @@ jobs:
           couchdb password: adm1nP4rty
       - name: Sleep for 30 seconds
         run: sleep 30s
+        shell: bash
+      - name: Create test fixtures
+        run: ./.scripts/generate_fixtures.sh
         shell: bash
       - name: Test
         run: SOFA_TEST_HOST_1=http://127.0.0.1:5984 SOFA_TEST_HOST_2=http://127.0.0.1:5985 go test -v ./...
