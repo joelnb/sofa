@@ -2,6 +2,7 @@ package sofa
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -49,10 +50,10 @@ func TestFeedPollingReal(t *testing.T) {
 		// This is not true if we are doing long polling - it would just block
 		// until a change is made (which would be never).
 		if !lp {
-			emptyUpdate, err := feed.Next(ChangesFeedParams{})
+			emptyUpdate, err := feed.Next(&ChangesFeedParams1{})
 			st.Assert(t, err, nil)
 
-			st.Expect(t, emptyUpdate.LastSeq, int64(0))
+			st.Expect(t, emptyUpdate.LastSeq, AlwaysString("0"))
 			st.Expect(t, emptyUpdate.Pending, int64(0))
 			st.Expect(t, len(emptyUpdate.Results), 0)
 		}
@@ -62,15 +63,15 @@ func TestFeedPollingReal(t *testing.T) {
 		_, err = db.Put(doc)
 		st.Assert(t, err, nil)
 
-		middleUpdate, err := feed.Next(ChangesFeedParams{})
+		middleUpdate, err := feed.Next(&ChangesFeedParams1{})
 		st.Assert(t, err, nil)
 
-		st.Expect(t, middleUpdate.LastSeq, int64(1))
+		st.Expect(t, middleUpdate.LastSeq, AlwaysString("1"))
 		st.Assert(t, middleUpdate.Pending, int64(0))
 
 		st.Assert(t, middleUpdate.Results[0].Deleted, false)
 		st.Assert(t, middleUpdate.Results[0].ID, "fruit1")
-		st.Assert(t, middleUpdate.Results[0].Seq, int64(1))
+		st.Assert(t, middleUpdate.Results[0].Seq, AlwaysString("1"))
 
 		_, err = db.Get(doc, doc.Metadata().ID, "")
 		st.Assert(t, err, nil)
@@ -78,18 +79,21 @@ func TestFeedPollingReal(t *testing.T) {
 		_, err = db.Delete(doc)
 		st.Assert(t, err, nil)
 
-		lastUpdate, err := feed.Next(ChangesFeedParams{})
+		lastUpdate, err := feed.Next(&ChangesFeedParams1{})
 		st.Assert(t, err, nil)
 
-		st.Assert(t, lastUpdate.LastSeq, int64(2))
+		st.Assert(t, lastUpdate.LastSeq, AlwaysString("2"))
 		st.Assert(t, lastUpdate.Pending, int64(0))
 
 		st.Assert(t, lastUpdate.Results[0].Deleted, true)
 		st.Assert(t, lastUpdate.Results[0].ID, "fruit1")
-		st.Assert(t, lastUpdate.Results[0].Seq, int64(2))
+		st.Assert(t, lastUpdate.Results[0].Seq, AlwaysString("2"))
 
-		updateSince, err := feed.Next(ChangesFeedParams{
-			Since: middleUpdate.LastSeq,
+		since, err := strconv.Atoi(string(middleUpdate.LastSeq))
+		st.Assert(t, err, nil)
+
+		updateSince, err := feed.Next(&ChangesFeedParams1{
+			Since: int64(since),
 		})
 		st.Assert(t, err, nil)
 
@@ -110,7 +114,7 @@ func TestFeedContinuousReal(t *testing.T) {
 		cleanTestDB(t, con.Connection, "feed_test_db", false)
 	}()
 
-	feed := db.ContinuousChangesFeed(ChangesFeedParams{})
+	feed := db.ContinuousChangesFeed(&ChangesFeedParams1{})
 
 	doc := getDefaultTestDoc()
 
@@ -122,7 +126,7 @@ func TestFeedContinuousReal(t *testing.T) {
 
 	st.Assert(t, middleUpdate.Deleted, false)
 	st.Assert(t, middleUpdate.ID, "fruit1")
-	st.Assert(t, middleUpdate.Seq, int64(1))
+	st.Assert(t, middleUpdate.Seq, AlwaysString("1"))
 
 	_, err = db.Get(doc, doc.Metadata().ID, "")
 	st.Assert(t, err, nil)
@@ -135,7 +139,7 @@ func TestFeedContinuousReal(t *testing.T) {
 
 	st.Assert(t, lastUpdate.Deleted, true)
 	st.Assert(t, lastUpdate.ID, "fruit1")
-	st.Assert(t, lastUpdate.Seq, int64(2))
+	st.Assert(t, lastUpdate.Seq, AlwaysString("2"))
 
 	otherDoc := getFeedTestOtherDoc()
 
@@ -150,7 +154,7 @@ func TestFeedContinuousReal(t *testing.T) {
 
 	st.Assert(t, updateAsync.Deleted, false)
 	st.Assert(t, updateAsync.ID, "fruit2")
-	st.Assert(t, updateAsync.Seq, int64(3))
+	st.Assert(t, updateAsync.Seq, AlwaysString("3"))
 }
 
 func TestFeedPolling2Real(t *testing.T) {
@@ -172,10 +176,10 @@ func TestFeedPolling2Real(t *testing.T) {
 		// This is not true if we are doing long polling - it would just block
 		// until a change is made (which would be never).
 		if !lp {
-			emptyUpdate, err := feed.Next(ChangesFeedParams{})
+			emptyUpdate, err := feed.Next(&ChangesFeedParams2{})
 			st.Assert(t, err, nil)
 
-			st.Expect(t, emptyUpdate.LastSeq, int64(0))
+			assertPrefix(t, string(emptyUpdate.LastSeq), "0-")
 			st.Expect(t, emptyUpdate.Pending, int64(0))
 			st.Expect(t, len(emptyUpdate.Results), 0)
 		}
@@ -185,15 +189,15 @@ func TestFeedPolling2Real(t *testing.T) {
 		_, err = db.Put(doc)
 		st.Assert(t, err, nil)
 
-		middleUpdate, err := feed.Next(ChangesFeedParams{})
+		middleUpdate, err := feed.Next(&ChangesFeedParams2{})
 		st.Assert(t, err, nil)
 
-		st.Expect(t, middleUpdate.LastSeq, int64(1))
+		assertPrefix(t, string(middleUpdate.LastSeq), "1-")
 		st.Assert(t, middleUpdate.Pending, int64(0))
 
 		st.Assert(t, middleUpdate.Results[0].Deleted, false)
 		st.Assert(t, middleUpdate.Results[0].ID, "fruit1")
-		st.Assert(t, middleUpdate.Results[0].Seq, int64(1))
+		assertPrefix(t, string(middleUpdate.Results[0].Seq), "1-")
 
 		_, err = db.Get(doc, doc.Metadata().ID, "")
 		st.Assert(t, err, nil)
@@ -201,18 +205,18 @@ func TestFeedPolling2Real(t *testing.T) {
 		_, err = db.Delete(doc)
 		st.Assert(t, err, nil)
 
-		lastUpdate, err := feed.Next(ChangesFeedParams{})
+		lastUpdate, err := feed.Next(&ChangesFeedParams2{})
 		st.Assert(t, err, nil)
 
-		st.Assert(t, lastUpdate.LastSeq, int64(2))
+		assertPrefix(t, string(lastUpdate.LastSeq), "2-")
 		st.Assert(t, lastUpdate.Pending, int64(0))
 
 		st.Assert(t, lastUpdate.Results[0].Deleted, true)
 		st.Assert(t, lastUpdate.Results[0].ID, "fruit1")
-		st.Assert(t, lastUpdate.Results[0].Seq, int64(2))
+		assertPrefix(t, string(lastUpdate.Results[0].Seq), "2-")
 
-		updateSince, err := feed.Next(ChangesFeedParams{
-			Since: middleUpdate.LastSeq,
+		updateSince, err := feed.Next(&ChangesFeedParams2{
+			Since: string(middleUpdate.LastSeq),
 		})
 		st.Assert(t, err, nil)
 
@@ -233,7 +237,7 @@ func TestFeedContinuous2Real(t *testing.T) {
 		cleanTestDB(t, con.Connection, "feed_test_db", false)
 	}()
 
-	feed := db.ContinuousChangesFeed(ChangesFeedParams{})
+	feed := db.ContinuousChangesFeed(&ChangesFeedParams2{})
 
 	doc := getDefaultTestDoc()
 
@@ -245,7 +249,7 @@ func TestFeedContinuous2Real(t *testing.T) {
 
 	st.Assert(t, middleUpdate.Deleted, false)
 	st.Assert(t, middleUpdate.ID, "fruit1")
-	st.Assert(t, middleUpdate.Seq, int64(1))
+	assertPrefix(t, string(middleUpdate.Seq), "1-")
 
 	_, err = db.Get(doc, doc.Metadata().ID, "")
 	st.Assert(t, err, nil)
@@ -258,7 +262,7 @@ func TestFeedContinuous2Real(t *testing.T) {
 
 	st.Assert(t, lastUpdate.Deleted, true)
 	st.Assert(t, lastUpdate.ID, "fruit1")
-	st.Assert(t, lastUpdate.Seq, int64(2))
+	assertPrefix(t, string(lastUpdate.Seq), "2-")
 
 	otherDoc := getFeedTestOtherDoc()
 
@@ -273,7 +277,7 @@ func TestFeedContinuous2Real(t *testing.T) {
 
 	st.Assert(t, updateAsync.Deleted, false)
 	st.Assert(t, updateAsync.ID, "fruit2")
-	st.Assert(t, updateAsync.Seq, int64(3))
+	assertPrefix(t, string(updateAsync.Seq), "3-")
 }
 
 func TestFeedPolling3Real(t *testing.T) {
@@ -295,10 +299,10 @@ func TestFeedPolling3Real(t *testing.T) {
 		// This is not true if we are doing long polling - it would just block
 		// until a change is made (which would be never).
 		if !lp {
-			emptyUpdate, err := feed.Next(ChangesFeedParams{})
+			emptyUpdate, err := feed.Next(&ChangesFeedParams2{})
 			st.Assert(t, err, nil)
 
-			st.Expect(t, emptyUpdate.LastSeq, int64(0))
+			assertPrefix(t, string(emptyUpdate.LastSeq), "0-")
 			st.Expect(t, emptyUpdate.Pending, int64(0))
 			st.Expect(t, len(emptyUpdate.Results), 0)
 		}
@@ -308,15 +312,15 @@ func TestFeedPolling3Real(t *testing.T) {
 		_, err = db.Put(doc)
 		st.Assert(t, err, nil)
 
-		middleUpdate, err := feed.Next(ChangesFeedParams{})
+		middleUpdate, err := feed.Next(&ChangesFeedParams2{})
 		st.Assert(t, err, nil)
 
-		st.Expect(t, middleUpdate.LastSeq, int64(1))
+		assertPrefix(t, string(middleUpdate.LastSeq), "1-")
 		st.Assert(t, middleUpdate.Pending, int64(0))
 
 		st.Assert(t, middleUpdate.Results[0].Deleted, false)
 		st.Assert(t, middleUpdate.Results[0].ID, "fruit1")
-		st.Assert(t, middleUpdate.Results[0].Seq, int64(1))
+		assertPrefix(t, string(middleUpdate.Results[0].Seq), "1-")
 
 		_, err = db.Get(doc, doc.Metadata().ID, "")
 		st.Assert(t, err, nil)
@@ -324,18 +328,18 @@ func TestFeedPolling3Real(t *testing.T) {
 		_, err = db.Delete(doc)
 		st.Assert(t, err, nil)
 
-		lastUpdate, err := feed.Next(ChangesFeedParams{})
+		lastUpdate, err := feed.Next(&ChangesFeedParams2{})
 		st.Assert(t, err, nil)
 
-		st.Assert(t, lastUpdate.LastSeq, int64(2))
+		assertPrefix(t, string(lastUpdate.LastSeq), "2-")
 		st.Assert(t, lastUpdate.Pending, int64(0))
 
 		st.Assert(t, lastUpdate.Results[0].Deleted, true)
 		st.Assert(t, lastUpdate.Results[0].ID, "fruit1")
-		st.Assert(t, lastUpdate.Results[0].Seq, int64(2))
+		assertPrefix(t, string(lastUpdate.Results[0].Seq), "2-")
 
-		updateSince, err := feed.Next(ChangesFeedParams{
-			Since: middleUpdate.LastSeq,
+		updateSince, err := feed.Next(&ChangesFeedParams2{
+			Since: string(middleUpdate.LastSeq),
 		})
 		st.Assert(t, err, nil)
 
@@ -356,7 +360,7 @@ func TestFeedContinuous3Real(t *testing.T) {
 		cleanTestDB(t, con.Connection, "feed_test_db", false)
 	}()
 
-	feed := db.ContinuousChangesFeed(ChangesFeedParams{})
+	feed := db.ContinuousChangesFeed(&ChangesFeedParams3{})
 
 	doc := getDefaultTestDoc()
 
@@ -368,7 +372,7 @@ func TestFeedContinuous3Real(t *testing.T) {
 
 	st.Assert(t, middleUpdate.Deleted, false)
 	st.Assert(t, middleUpdate.ID, "fruit1")
-	st.Assert(t, middleUpdate.Seq, int64(1))
+	assertPrefix(t, string(middleUpdate.Seq), "1-")
 
 	_, err = db.Get(doc, doc.Metadata().ID, "")
 	st.Assert(t, err, nil)
@@ -381,7 +385,7 @@ func TestFeedContinuous3Real(t *testing.T) {
 
 	st.Assert(t, lastUpdate.Deleted, true)
 	st.Assert(t, lastUpdate.ID, "fruit1")
-	st.Assert(t, lastUpdate.Seq, int64(2))
+	assertPrefix(t, string(lastUpdate.Seq), "2-")
 
 	otherDoc := getFeedTestOtherDoc()
 
@@ -396,5 +400,5 @@ func TestFeedContinuous3Real(t *testing.T) {
 
 	st.Assert(t, updateAsync.Deleted, false)
 	st.Assert(t, updateAsync.ID, "fruit2")
-	st.Assert(t, updateAsync.Seq, int64(3))
+	assertPrefix(t, string(updateAsync.Seq), "3-")
 }

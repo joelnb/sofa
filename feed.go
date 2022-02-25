@@ -34,7 +34,7 @@ type ChangesFeed interface {
 
 // ChangesFeedUpdate is a single update from a changes feed.
 type ChangesFeedUpdate struct {
-	LastSeq int64               `json:"last_seq"`
+	LastSeq AlwaysString        `json:"last_seq"`
 	Pending int64               `json:"pending"`
 	Results []ChangesFeedChange `json:"results"`
 }
@@ -45,14 +45,19 @@ type ChangesFeedChange struct {
 	Changes []struct {
 		Rev string `json:"rev"`
 	} `json:"changes"`
-	Deleted bool   `json:"deleted"`
-	ID      string `json:"id"`
-	Seq     int64  `json:"seq"`
+	Deleted bool         `json:"deleted"`
+	ID      string       `json:"id"`
+	Seq     AlwaysString `json:"seq"`
 }
 
-// ChangesFeedParams includes all parameters which can be provided to
-// control the output of a changes feed from a database.
-type ChangesFeedParams struct {
+type ChangesFeedParams interface {
+	Values() (url.Values, error)
+	SetFeedType(ftype string)
+}
+
+// ChangesFeedParams1 includes all parameters which can be provided to
+// control the output of a changes feed from a database on a version 1 server.
+type ChangesFeedParams1 struct {
 	DocumentIDs            []string         `url:"doc_ids,omitempty"`
 	Conflicts              BooleanParameter `url:"conflicts,omitempty"`
 	Descending             BooleanParameter `url:"descending,omitempty"`
@@ -70,10 +75,10 @@ type ChangesFeedParams struct {
 	View                   string           `url:"view,omitempty"`
 }
 
-// Values converts a ChangesFeedParams to a url.Values by performing pre-conversion
+// Values converts a ChangesFeedParams1 to a url.Values by performing pre-conversion
 // of any values which require special handling by conversion to JSON before being
 // passed to CouchDB.
-func (params ChangesFeedParams) Values() (url.Values, error) {
+func (params *ChangesFeedParams1) Values() (url.Values, error) {
 	v, err := query.Values(params)
 	if err != nil {
 		return nil, err
@@ -91,6 +96,57 @@ func (params ChangesFeedParams) Values() (url.Values, error) {
 	return v, nil
 }
 
+func (params *ChangesFeedParams1) SetFeedType(ftype string) {
+	params.Feed = ftype
+}
+
+// ChangesFeedParams2 includes all parameters which can be provided to
+// control the output of a changes feed from a database on a version 2/3 server.
+type ChangesFeedParams2 struct {
+	DocumentIDs            []string         `url:"doc_ids,omitempty"`
+	Conflicts              BooleanParameter `url:"conflicts,omitempty"`
+	Descending             BooleanParameter `url:"descending,omitempty"`
+	Feed                   string           `url:"feed,omitempty"`
+	Filter                 string           `url:"filter,omitempty"`
+	Heartbeat              int64            `url:"heartbeat,omitempty"`
+	IncludeDocs            BooleanParameter `url:"include_docs,omitempty"`
+	Attachments            BooleanParameter `url:"attachments,omitempty"`
+	AttachmentEncodingInfo BooleanParameter `url:"att_encoding_info,omitempty"`
+	LastEventID            int64            `url:"last-event-id,omitempty"`
+	Limit                  int64            `url:"limit,omitempty"`
+	Since                  string           `url:"since,omitempty"`
+	Style                  string           `url:"style,omitempty"`
+	Timeout                int64            `url:"timeout,omitempty"`
+	View                   string           `url:"view,omitempty"`
+}
+
+type ChangesFeedParams3 = ChangesFeedParams2
+
+// Values converts a ChangesFeedParams2 to a url.Values by performing pre-conversion
+// of any values which require special handling by conversion to JSON before being
+// passed to CouchDB.
+func (params *ChangesFeedParams2) Values() (url.Values, error) {
+	v, err := query.Values(params)
+	if err != nil {
+		return nil, err
+	}
+
+	if params.DocumentIDs != nil {
+		jBytes, err := json.Marshal(params.DocumentIDs)
+		if err != nil {
+			return nil, err
+		}
+
+		v.Set("doc_ids", string(jBytes))
+	}
+
+	return v, nil
+}
+
+func (params *ChangesFeedParams2) SetFeedType(ftype string) {
+	params.Feed = ftype
+}
+
 // PollingChangesFeed can be used for either type of changes feed which polls
 // the database for information ("normal" and "longpoll").
 type PollingChangesFeed struct {
@@ -101,7 +157,7 @@ type PollingChangesFeed struct {
 // Next polls for the next update from the database. This may block until a timeout is
 // reached if there are no updates available.
 func (f PollingChangesFeed) Next(params ChangesFeedParams) (ChangesFeedUpdate, error) {
-	params.Feed = f.feedType
+	params.SetFeedType(f.feedType)
 
 	v, err := params.Values()
 	if err != nil {
@@ -127,7 +183,7 @@ type ContinuousChangesFeed struct {
 // becomes available.
 func (f *ContinuousChangesFeed) Next() (ChangesFeedChange, error) {
 	if f.resp == nil {
-		f.params.Feed = string(FeedContinuous)
+		f.params.SetFeedType(string(FeedContinuous))
 
 		v, err := f.params.Values()
 		if err != nil {

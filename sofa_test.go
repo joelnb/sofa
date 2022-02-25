@@ -3,6 +3,7 @@ package sofa
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -10,6 +11,13 @@ import (
 )
 
 var globalTestConnections *TestConnections
+
+func assertPrefix(t *testing.T, have, wantPrefix string) {
+	if !strings.HasPrefix(have, wantPrefix) {
+		t.Fail()
+		t.Logf("Wanted a string starting with '%s', got: %s", wantPrefix, have)
+	}
+}
 
 func getDefaultTestDoc() Document {
 	return &struct {
