@@ -11,12 +11,38 @@ import (
 
 var globalTestConnections *TestConnections
 
+func getDefaultTestDoc() Document {
+	return &struct {
+		DocumentMetadata
+		Name string `json:"name"`
+		Type string `json:"type"`
+	}{
+		DocumentMetadata: DocumentMetadata{
+			ID: "fruit1",
+		},
+		Name: "apple",
+		Type: "fruit",
+	}
+}
+
+// Shared function for all versions because this functionality never has a difference
+func cleanTestDB(t *testing.T, con *Connection, name string, allowMissing bool) {
+	// Delete the DB if it currently exists
+	if err := con.DeleteDatabase(name); err != nil {
+		if !allowMissing || !ErrorStatus(err, 404) {
+			t.Fatal(err)
+		}
+	}
+}
+
 type TestConnections struct {
 	Version1Host string
 	Version2Host string
+	Version3Host string
 
 	Version1MockHost string
 	Version2MockHost string
+	Version3MockHost string
 }
 
 const (
@@ -29,9 +55,11 @@ func NewTestConnections() *TestConnections {
 	return &TestConnections{
 		Version1Host: os.Getenv("SOFA_TEST_HOST_1"),
 		Version2Host: os.Getenv("SOFA_TEST_HOST_2"),
+		Version3Host: os.Getenv("SOFA_TEST_HOST_3"),
 
 		Version1MockHost: "couchdb1.local",
 		Version2MockHost: "couchdb2.local",
+		Version3MockHost: "couchdb3.local",
 	}
 }
 
@@ -72,6 +100,12 @@ func (tc *TestConnections) Version2(t *testing.T, mock bool) *CouchDB2Connection
 	con := tc.testInnerConnection(t, mock, 2, tc.Version2MockHost, tc.Version2Host, NullAuthenticator())
 
 	return &CouchDB2Connection{con}
+}
+
+func (tc *TestConnections) Version3(t *testing.T, mock bool) *CouchDB3Connection {
+	con := tc.testInnerConnection(t, mock, 3, tc.Version3MockHost, tc.Version3Host, BasicAuthenticator("admin", "adm1nP4rty"))
+
+	return &CouchDB3Connection{&CouchDB2Connection{con}}
 }
 
 func TestMain(m *testing.M) {

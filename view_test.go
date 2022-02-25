@@ -106,17 +106,7 @@ func TestViewReal(t *testing.T) {
 		}
 	}()
 
-	appleDoc := &struct {
-		DocumentMetadata
-		Name string `json:"name"`
-		Type string `json:"type"`
-	}{
-		DocumentMetadata: DocumentMetadata{
-			ID: "fruit1",
-		},
-		Name: "apple",
-		Type: "fruit",
-	}
+	appleDoc := getDefaultTestDoc()
 
 	kiwiDoc := &struct {
 		DocumentMetadata

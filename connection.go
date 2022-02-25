@@ -31,6 +31,11 @@ type CouchDB2Connection struct {
 	*Connection
 }
 
+// CouchDB3Connection is a connection specifically for a version 3 server.
+type CouchDB3Connection struct {
+	*CouchDB2Connection
+}
+
 func newConnection(serverURL string, timeout time.Duration, auth Authenticator) (*Connection, error) {
 	hasURLScheme, err := regexp.MatchString("^https?://.*", serverURL)
 	if err != nil {
@@ -89,6 +94,17 @@ func NewConnection2(serverURL string, timeout time.Duration, auth Authenticator)
 	}
 
 	return &CouchDB2Connection{con}, nil
+}
+
+// NewConnection3 creates a new CouchDB3Connection which can be used to interact with a single CouchDB server.
+// Any query parameters passed in the serverUrl are discarded before creating the connection.
+func NewConnection3(serverURL string, timeout time.Duration, auth Authenticator) (*CouchDB3Connection, error) {
+	con, err := NewConnection2(serverURL, timeout, auth)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CouchDB3Connection{con}, nil
 }
 
 // URL returns the URL of the server with a path appended.

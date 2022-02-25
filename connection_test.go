@@ -83,7 +83,7 @@ func TestConnectionPing(t *testing.T) {
 	}
 }
 
-func TestConnectionServerInfo(t *testing.T) {
+func TestConnectionServerInfo1(t *testing.T) {
 	defer gock.Off()
 
 	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version1MockHost)).
@@ -132,6 +132,32 @@ func TestConnectionServerInfo2(t *testing.T) {
 	st.Assert(t, info.Vendor["name"].(string), "The Apache Software Foundation")
 }
 
+func TestConnectionServerInfo3(t *testing.T) {
+	defer gock.Off()
+
+	gock.New(fmt.Sprintf("https://%s", globalTestConnections.Version3MockHost)).
+		Get("/").
+		Reply(200).
+		JSON(map[string]interface{}{
+			"couchdb":  "Welcome",
+			"features": []string{"access-ready", "partitioned", "pluggable-storage-engines", "reshard", "scheduler"},
+			"version":  "3.2.1",
+			"uuid":     "8d84dd13ec80d945086dbf40a068f910",
+			"git_sha":  "244d428af",
+			"vendor":   map[string]string{"name": "The Apache Software Foundation"},
+		})
+
+	con := globalTestConnections.Version3(t, true)
+
+	info, err := con.ServerInfo()
+	st.Assert(t, err, nil)
+
+	st.Assert(t, info.CouchDB, "Welcome")
+	st.Assert(t, info.Features, []string{"access-ready", "partitioned", "pluggable-storage-engines", "reshard", "scheduler"})
+	st.Assert(t, info.Version, "3.2.1")
+	st.Assert(t, info.Vendor["name"].(string), "The Apache Software Foundation")
+}
+
 func TestConnectionListDatabases(t *testing.T) {
 	defer gock.Off()
 
@@ -155,7 +181,7 @@ func TestConnectionListDatabases(t *testing.T) {
 	}
 }
 
-func TestConnectionReal(t *testing.T) {
+func TestConnectionReal1(t *testing.T) {
 	con := globalTestConnections.Version1(t, false)
 
 	info, err := con.ServerInfo()
@@ -163,38 +189,75 @@ func TestConnectionReal(t *testing.T) {
 
 	st.Assert(t, info.CouchDB, "Welcome")
 
-	// Delete the DB if it currently exists
-	if err := con.DeleteDatabase("test_db"); err != nil {
-		if !ErrorStatus(err, 404) {
-			t.Fatal(err)
-		}
-	}
+	cleanTestDB(t, con.Connection, "test_db", true)
 
 	db, err := con.CreateDatabase("test_db")
 	st.Assert(t, err, nil)
 
-	doc := &struct {
-		DocumentMetadata
-		Name string `json:"name"`
-		Type string `json:"type"`
-	}{
-		DocumentMetadata: DocumentMetadata{
-			ID: "fruit1",
-		},
-		Name: "apple",
-		Type: "fruit",
-	}
+	doc := getDefaultTestDoc()
 
 	_, err = db.Put(doc)
 	st.Assert(t, err, nil)
 
-	_, err = db.Get(doc, doc.ID, "")
+	_, err = db.Get(doc, doc.Metadata().ID, "")
 	st.Assert(t, err, nil)
 
 	_, err = db.Delete(doc)
 	st.Assert(t, err, nil)
 
-	if err := con.DeleteDatabase("test_db"); err != nil {
-		t.Fatal(err)
-	}
+	cleanTestDB(t, con.Connection, "test_db", false)
+}
+
+func TestConnectionReal2(t *testing.T) {
+	con := globalTestConnections.Version2(t, false)
+
+	info, err := con.ServerInfo()
+	st.Assert(t, err, nil)
+
+	st.Assert(t, info.CouchDB, "Welcome")
+
+	cleanTestDB(t, con.Connection, "test_db", true)
+
+	db, err := con.CreateDatabase("test_db")
+	st.Assert(t, err, nil)
+
+	doc := getDefaultTestDoc()
+
+	_, err = db.Put(doc)
+	st.Assert(t, err, nil)
+
+	_, err = db.Get(doc, doc.Metadata().ID, "")
+	st.Assert(t, err, nil)
+
+	_, err = db.Delete(doc)
+	st.Assert(t, err, nil)
+
+	cleanTestDB(t, con.Connection, "test_db", false)
+}
+
+func TestConnectionReal3(t *testing.T) {
+	con := globalTestConnections.Version3(t, false)
+
+	info, err := con.ServerInfo()
+	st.Assert(t, err, nil)
+
+	st.Assert(t, info.CouchDB, "Welcome")
+
+	cleanTestDB(t, con.CouchDB2Connection.Connection, "test_db", true)
+
+	db, err := con.CreateDatabase("test_db")
+	st.Assert(t, err, nil)
+
+	doc := getDefaultTestDoc()
+
+	_, err = db.Put(doc)
+	st.Assert(t, err, nil)
+
+	_, err = db.Get(doc, doc.Metadata().ID, "")
+	st.Assert(t, err, nil)
+
+	_, err = db.Delete(doc)
+	st.Assert(t, err, nil)
+
+	cleanTestDB(t, con.CouchDB2Connection.Connection, "test_db", false)
 }

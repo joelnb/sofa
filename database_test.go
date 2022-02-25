@@ -123,3 +123,48 @@ func TestDatabaseList(t *testing.T) {
 		st.Assert(t, row.Document, expected.Document)
 	}
 }
+
+func TestDatabaseReal1(t *testing.T) {
+	con := globalTestConnections.Version1(t, false)
+
+	cleanTestDB(t, con.Connection, "test_db", true)
+
+	db, err := con.CreateDatabase("test_db")
+	st.Assert(t, err, nil)
+
+	metadata, err := db.Metadata()
+	st.Assert(t, err, nil)
+	st.Assert(t, metadata.Name, "test_db")
+
+	cleanTestDB(t, con.Connection, "test_db", false)
+}
+
+func TestDatabaseReal2(t *testing.T) {
+	con := globalTestConnections.Version2(t, false)
+
+	cleanTestDB(t, con.Connection, "test_db", true)
+
+	db, err := con.CreateDatabase("test_db")
+	st.Assert(t, err, nil)
+
+	metadata, err := db.Metadata()
+	st.Assert(t, err, nil)
+	st.Assert(t, metadata.Name, "test_db")
+
+	cleanTestDB(t, con.Connection, "test_db", false)
+}
+
+func TestDatabaseReal3(t *testing.T) {
+	con := globalTestConnections.Version3(t, false)
+
+	cleanTestDB(t, con.Connection, "test_db", true)
+
+	db, err := con.CreateDatabase("test_db")
+	st.Assert(t, err, nil)
+
+	metadata, err := db.Metadata()
+	st.Assert(t, err, nil)
+	st.Assert(t, metadata.Name, "test_db")
+
+	cleanTestDB(t, con.Connection, "test_db", false)
+}
