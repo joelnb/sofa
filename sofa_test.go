@@ -1,7 +1,6 @@
 package sofa
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -77,7 +76,7 @@ func (tc *TestConnections) hostOrSkip(t *testing.T, mock bool, version int, mock
 	}
 
 	if realHost == "" {
-		t.Skip(fmt.Sprintf("skipping - $SOFA_TEST_HOST_%d not set", version))
+		t.Skipf("skipping - $SOFA_TEST_HOST_%d not set", version)
 	}
 
 	return realHost
