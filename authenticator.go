@@ -243,7 +243,6 @@ func (c *clientCertAuthenticator) Client() (*http.Client, error) {
 		tlsConfig.RootCAs = caCertPool
 	}
 
-	tlsConfig.BuildNameToCertificate()
 	transport := &http.Transport{
 		TLSClientConfig: tlsConfig,
 	}
