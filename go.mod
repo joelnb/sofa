@@ -8,4 +8,4 @@ require (
 	gopkg.in/h2non/gock.v1 v1.1.2
 )
 
-go 1.13
+go 1.19
