@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/nbio/st"
-	"gopkg.in/h2non/gock.v1"
+	"github.com/h2non/gock"
 )
 
 func getFeedTestOtherDoc() Document {
