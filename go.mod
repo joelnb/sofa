@@ -4,7 +4,7 @@ require (
 	github.com/google/go-querystring v1.1.0
 	github.com/h2non/gock v1.2.0
 	github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32
-	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a
+	github.com/youmark/pkcs8 v1.1
 )
 
 require (
