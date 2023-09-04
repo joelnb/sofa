@@ -3,7 +3,6 @@ package sofa
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 )
 
 // Attachment represents files or other data which is attached to documents in the
@@ -42,7 +41,7 @@ func (db *Database) GetAttachment(docid, name, rev string) ([]byte, error) {
 		return nil, err
 	}
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 }
 
 // PutAttachment replaces the content of the attachment with new content read from an
@@ -63,7 +62,7 @@ func (db *Database) PutAttachment(docid, name string, doc io.Reader, rev string)
 		return "", err
 	}
 
-	respBytes, err := ioutil.ReadAll(resp.Body)
+	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -90,7 +89,7 @@ func (db *Database) DeleteAttachment(docid, name, rev string) (string, error) {
 		return "", err
 	}
 
-	respBytes, err := ioutil.ReadAll(resp.Body)
+	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}

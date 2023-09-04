@@ -10,9 +10,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
+	"os"
 	"strings"
 
 	"github.com/youmark/pkcs8"
@@ -159,12 +159,12 @@ func (c *clientCertAuthenticator) Client() (*http.Client, error) {
 	if c.Password == "" {
 		cert, err = tls.LoadX509KeyPair(c.CertPath, c.KeyPath)
 	} else {
-		certBytes, readErr := ioutil.ReadFile(c.CertPath)
+		certBytes, readErr := os.ReadFile(c.CertPath)
 		if readErr != nil {
 			return nil, readErr
 		}
 
-		keyBytes, readErr := ioutil.ReadFile(c.KeyPath)
+		keyBytes, readErr := os.ReadFile(c.KeyPath)
 		if readErr != nil {
 			return nil, readErr
 		}
@@ -233,7 +233,7 @@ func (c *clientCertAuthenticator) Client() (*http.Client, error) {
 	}
 
 	if c.CaPath != "" {
-		caCert, err := ioutil.ReadFile(c.CaPath)
+		caCert, err := os.ReadFile(c.CaPath)
 		if err != nil {
 			return nil, err
 		}
