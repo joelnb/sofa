@@ -1,7 +1,7 @@
 module github.com/joelnb/sofa
 
 require (
-	github.com/google/go-querystring v1.1.0
+	github.com/google/go-querystring v1.2.0
 	github.com/h2non/gock v1.2.0
 	github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78
